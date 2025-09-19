@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="robot_description">
+
+
+  <link name="base_footprint">
+      <origin xyz="0 0 0.1" rpy="0 0 0" />
+  </link>
+
+  <joint name="base_footprint_to_base_link" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.4" rpy="0 0 0"/>
+  </joint>
+  
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.00455949538882372 2.98072989951548E-05 -0.00732133437147531"
+        rpy="0 0 0" />
+      <mass
+        value="3.98044471341497" />
+      <inertia
+        ixx="0.0309523235772865"
+        ixy="-3.26148793314342E-09"
+        ixz="-6.92311630980574E-05"
+        iyy="0.0917035140024459"
+        iyz="3.21324609254823E-08"
+        izz="0.116670838462844" />
+    </inertial>
+
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/base_link.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/base_link.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link
+    name="front_hinge">
+    <inertial>
+      <origin
+        xyz="-6.66133814775094E-15 0 0.104803731952649"
+        rpy="0 0 0" />
+      <mass
+        value="0.146953839835609" />
+      <inertia
+        ixx="0.0005425509013609"
+        ixy="1.6462822586351E-36"
+        ixz="-3.47849161919726E-20"
+        iyy="0.0005425509013609"
+        iyz="1.56187225364287E-22"
+        izz="1.66721257729828E-05" />
+    </inertial>
+
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+      <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/front_hinge.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+      <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/front_hinge.stl" scale="1 1 1"/>
+
+      </geometry>
+    </collision>
+  </link>
+
+  <joint
+    name="front_hinge_joint"
+    type="revolute">
+    <origin
+      xyz="0.48615 3E-05 -0.2385"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="front_hinge" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="10"
+      velocity="10" />
+    <dynamics
+      friction="0.0" />
+  </joint>
+
+  <link
+    name="front_wheel_link">
+    <inertial>
+      <origin
+        xyz="-0.00525364785120086 -1.55099892684973E-05 0.0174290152973623"
+        rpy="0 0 0" />
+      <mass
+        value="0.352967556141925" />
+      <inertia
+        ixx="0.00073004158852838"
+        ixy="9.61802000401493E-08"
+        ixz="0.000121568718275352"
+        iyy="0.00101429227078045"
+        iyz="1.87365885942766E-07"
+        izz="0.000367004018839029" />
+    </inertial>
+
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/front_wheel_link.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+         <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/front_wheel_link.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint
+    name="front_wheel_joint"
+    type="fixed">
+    <origin
+      xyz="0.026678 0 -0.101"
+      rpy="0 0 0" />
+    <parent
+      link="front_hinge" />
+    <child
+      link="front_wheel_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+
+  <link
+    name="left_wheel_link">
+    <inertial>
+      <origin
+        xyz="-1.90751666109268E-05 -0.0583143245180203 2.8460548917586E-09"
+        rpy="0 0 0" />
+      <mass
+        value="3.02704875281272" />
+      <inertia
+        ixx="0.020879182250798"
+        ixy="-2.82489897551829E-06"
+        ixz="6.07375197746533E-09"
+        iyy="0.0331000539100534"
+        iyz="-1.0325721327057E-10"
+        izz="0.0208828083641725" />
+    </inertial>
+
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+      <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/left_wheel_link.stl" scale="1 1 1"/>
+
+      </geometry>
+      <material name="black"/>
+    </visual>
+    
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/left_wheel_link.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint
+    name="left_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="0.0064024 0.29733 -0.22493"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="left_wheel_link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      effort="100"
+      velocity="100" />
+    <dynamics
+      friction="0.1" />
+  </joint>
+
+  <link
+    name="rear_hinge">
+    <inertial>
+      <origin
+        xyz="-1.92235116713846E-13 -1.06920028386526E-12 0.104803731952705"
+        rpy="0 0 0" />
+      <mass
+        value="0.146953839835609" />
+      <inertia
+        ixx="0.000542550901360898"
+        ixy="5.70186614177259E-34"
+        ixz="-1.85421954433821E-18"
+        iyy="0.000542550901360898"
+        iyz="2.51645457634199E-21"
+        izz="1.66721257729828E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/rear_hinge.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/rear_hinge.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint
+    name="rear_hinge_joint"
+    type="revolute">
+    <origin
+      xyz="-0.47385 3E-05 -0.2385"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="rear_hinge" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="10"
+      velocity="10" />
+    <dynamics
+      friction="0.0" />
+  </joint>
+
+  <link
+    name="rear_wheel_link">
+    <inertial>
+      <origin
+        xyz="-0.00525364785138838 -1.55099903700051E-05 0.0174290152973615"
+        rpy="0 0 0" />
+      <mass
+        value="0.352967556141925" />
+      <inertia
+        ixx="0.000730041588528382"
+        ixy="9.61802000397574E-08"
+        ixz="0.000121568718275352"
+        iyy="0.00101429227078046"
+        iyz="1.87365885942579E-07"
+        izz="0.00036700401883903" />
+    </inertial>
+
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/rear_wheel_link.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+         <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/rear_wheel_link.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint
+    name="rear_wheel_joint"
+    type="fixed">
+    <origin
+      xyz="0.026678 0 -0.101"
+      rpy="0 0 0" />
+    <parent
+      link="rear_hinge" />
+    <child
+      link="rear_wheel_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+
+  <link
+    name="right_wheel_link">
+    <inertial>
+      <origin
+        xyz="-1.90759469208546E-05 0.0582856760499313 2.84605594647047E-09"
+        rpy="0 0 0" />
+      <mass
+        value="3.02704880758978" />
+      <inertia
+        ixx="0.0208791824415697"
+        ixy="-2.82482025914986E-06"
+        ixz="6.07375181847265E-09"
+        iyy="0.0331000541778796"
+        iyz="-1.03257351645427E-10"
+        izz="0.0208828085549403" />
+    </inertial>
+
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/right_wheel_link.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/right_wheel_link.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint
+    name="right_wheel_joint"
+    type="continuous">
+    <origin
+      xyz="0.0064024 -0.29727 -0.22493"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="right_wheel_link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      effort="100"
+      velocity="100" />
+    <dynamics
+      friction="0.1" />
+  </joint>
+
+  <link
+    name="camera_link">
+    <inertial>
+      <origin
+        xyz="-0.00197487895030868 0.000642205545098973 -0.011631218801564"
+        rpy="0 0 0" />
+      <mass
+        value="0.165291294407499" />
+      <inertia
+        ixx="0.000122677784636091"
+        ixy="1.66379193010169E-06"
+        ixz="-1.44487316744383E-06"
+        iyy="7.25411975192449E-05"
+        iyz="1.1220571332297E-06"
+        izz="0.000106349287979594" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/camera_link.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="yellow"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/camera_link.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint
+    name="base_camera_joint"
+    type="fixed">
+    <origin
+      xyz="0.48615 3E-05 0.03967"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="camera_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+
+  <link
+    name="lidar_link">
+    <inertial>
+      <origin
+        xyz="-3.17066240373975E-06 0.000590605162272828 -0.00345445998991967"
+        rpy="0 0 0" />
+      <mass
+        value="0.627783620462149" />
+      <inertia
+        ixx="0.00073292617814455"
+        ixy="-1.35890547511391E-09"
+        ixz="-6.4072150674834E-08"
+        iyy="0.000714794924662058"
+        iyz="1.41933297263802E-05"
+        izz="0.000851160993650038" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/lidar_link.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="cyan"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+          <mesh filename="file:///home/tamir/thesis/autonomousPro/src/robot_description/meshes/lidar_link.stl" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint
+    name="base_lidar_joint"
+    type="fixed">
+    <origin
+      xyz="0.0011524 3E-05 0.1424"
+      rpy="0 0 -1.5708" />
+    <parent
+      link="base_link" />
+    <child
+      link="lidar_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+
+    <link name="imu_link"/>
+  <joint name="base_to_imu" type="fixed">
+    <parent link="base_link"/>
+    <child  link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+      <!-- Gazebo Plugin for IMU -->
+    <gazebo reference="imu_link">
+        <sensor name="imu_sensor" type="imu">
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <update_rate>100.0</update_rate>
+            <plugin name="imu_controller" filename="libgazebo_ros_imu_sensor.so">
+                <ros>
+                    <argument>~/out:=imu</argument> <!--   the topic we are publishing on    -->
+                </ros>
+                <output_type>sensor_msgs/msg/Imu</output_type>
+                <frame_name>imu_link</frame_name>
+            </plugin>
+            <imu>
+                <topic>/imu</topic>
+                <gaussian_noise>0.01</gaussian_noise>
+            </imu>
+        </sensor>
+    </gazebo>
+
+    <gazebo reference ="lidar_link">
+        <sensor name="laser_link" type="ray">
+            <pose> 0 0 0 0 0 0 </pose>
+            <visualize>false</visualize>
+            <update_rate>20.0</update_rate>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>500</samples>
+                        <min_angle>-3.14</min_angle>
+                        <max_angle>3.14</max_angle>
+                    </horizontal>
+                </scan>
+                <range>
+                    <min>0.5</min>
+                    <max>10</max>
+                </range>
+            </ray>
+            <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+                <ros>
+                    <argument>~/out:=scan</argument>
+                </ros>
+                <output_type>sensor_msgs/LaserScan</output_type>
+                <frame_name>lidar_link</frame_name>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+  <gazebo reference="camera_link">
+    <sensor name="camera" type="depth">
+      <pose> 0 0 0 0 0 0 </pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <camera>
+        <horizontal_fov>1.089</horizontal_fov>
+        <image>
+          <format>B8G8R8</format>
+          <width>640</width>
+          <height>480</height>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>8.0</far>
+        </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/camera</namespace>
+          <remapping>image_raw:=color/image_raw</remapping>
+          <remapping>depth/image_raw:=depth/image_rect_raw</remapping>
+        </ros>
+        <frame_name>camera_link_optical</frame_name>
+        <min_depth>0.1</min_depth>
+        <max_depth>100.0</max_depth>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot> 

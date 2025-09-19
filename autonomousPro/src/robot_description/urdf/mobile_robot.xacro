@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="wheel_r" value="0.175" /> <!-- without load the wheel diameter is 0.35 (radius = 0.175) so might go between 0.16 - 0.17 with standard load -->
+    <xacro:property name="wheel_l" value="0.13" />
+    <xacro:property name="wheel_axis_h" value="0.18802" /> 
+    
+    <xacro:property name="hinge_l" value="${wheel_r - small_wheel_r + wheel_axis_h}" />
+    <xacro:property name="hinge_r" value="0.02" />
+
+    <xacro:property name="small_wheel_r" value="0.063" />
+    <xacro:property name="small_wheel_l" value="0.028" />
+    <xacro:property name="axis_dist" value="0.03" />
+
+    <xacro:property name="base_l" value="1.0" />
+    <xacro:property name="base_w" value="0.7" />
+    <xacro:property name="base_h" value="0.3" />
+    <xacro:property name="base_xyz" value="0 0 0" /> <!-- ${base_h / 2} : what z used to be -->
+    <xacro:property name="wheel_rpy" value="${pi / 2.0} 0 0" />
+
+    <xacro:property name="camera_l" value="0.01" />
+    <xacro:property name="camera_w" value="0.1" />
+    <xacro:property name="camera_h" value="0.05" />
+
+
+    <!-- body -->
+
+    <link name="base_footprint" />
+
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <box size="${base_l} ${base_w} ${base_h}" />
+            </geometry>
+            <origin xyz="${base_xyz}" rpy="0 0 0" />
+            <material name="green" />
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${base_l} ${base_w} ${base_h}" />
+            </geometry>
+            <origin xyz="${base_xyz}" rpy="0 0 0" />
+        </collision>
+        <xacro:box_inertia mass="25.0" l="${2*base_l}" w="${2*base_w}" h="${2*base_h}" xyz="${base_xyz}" rpy="0 0 0" />
+    </link>
+
+    <joint name="footprint_base_joint" type="fixed">
+        <parent link="base_footprint" />
+        <child link="base_link" />
+        <origin xyz="0 0 ${wheel_r + wheel_axis_h + (base_h / 2.0)}" rpy="0 0 0" /> <!-- + (base_h / 2) -->
+    </joint>
+
+    <!-- wheel funtions -->
+
+    <xacro:macro name="create_wheel_link" params="prefix">
+
+    <link name="${prefix}_wheel_link">
+        <visual>
+            <geometry>
+                <cylinder radius="${wheel_r}" length="${wheel_l}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="${wheel_rpy}" />
+            <material name="blue" />
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${wheel_r}" length="${wheel_l}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="${wheel_rpy}" />
+        </collision>
+        <xacro:wheel_inertia mass="3.0" l="${2*wheel_l}" r="${2*wheel_r}" xyz="0 0 0" rpy="${wheel_rpy}" />
+    </link>
+
+    </xacro:macro> 
+
+    <xacro:macro name="create_small_wheel_link" params="prefix">
+
+    <link name="${prefix}_wheel_link">
+        <visual>
+            <geometry>
+                <cylinder radius="${small_wheel_r}" length="${small_wheel_l}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="${wheel_rpy}" />
+            <material name="blue" />
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${small_wheel_r}" length="${small_wheel_l}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="${wheel_rpy}" />
+        </collision>
+        <xacro:wheel_inertia mass="1.5" l="${2*small_wheel_l}" r="${2*small_wheel_r}" xyz="0 0 0" rpy="${wheel_rpy}" />
+    </link>
+
+    </xacro:macro>
+
+    <!-- wheels creations -->
+
+    <xacro:create_wheel_link prefix="left" />
+
+    <joint name="left_wheel_joint" type="continuous">
+        <parent link="base_link" />
+        <child link="left_wheel_link" />
+        <origin xyz="0 ${(base_w - wheel_r) / 2} ${-(base_h / 2) - wheel_axis_h}" rpy="0 0 0" />
+        <axis xyz="0 1 0" />
+        <limit velocity="100.0" effort="100.0" />
+        <!-- <dynamics damping="10.0" friction="10.0" /> that's actually a lot prettyh sureeee -->
+    </joint>
+
+    <xacro:create_wheel_link prefix="right" />
+
+    <joint name="right_wheel_joint" type="continuous">
+        <parent link="base_link" />
+        <child link="right_wheel_link" />
+        <origin xyz="0 ${-((base_w - wheel_r) / 2)} ${-(base_h / 2) - wheel_axis_h}" rpy="0 0 0" />
+         <axis xyz="0 1 0" />
+    </joint>
+
+    <!-- Front -->
+
+    <link name="front_hinge">
+        <visual>
+            <geometry>
+                <cylinder radius="${hinge_r}" length="${hinge_l}" />
+            </geometry>
+            <origin xyz="0 0 ${hinge_l / 2.0}" rpy="0 0 0" />
+            <material name="grey" />
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${hinge_r}" length="${hinge_l}" />
+            </geometry>
+            <origin xyz="0 0 ${hinge_l / 2.0}" rpy="0 0 0" />
+        </collision>
+        <xacro:wheel_inertia mass="0.5" l="${2*hinge_l}" r="${2*hinge_r}" xyz="0 0 ${hinge_l / 2.0}" rpy="0 0 0" />
+    </link>
+
+    <joint name="front_hinge_joint" type="continuous">
+        <parent link="base_link" />
+        <child link="front_hinge" />
+        <origin xyz="0.48 0 ${-((base_h / 2.0) + wheel_r - small_wheel_r + wheel_axis_h)}" rpy="0 0 0" />  
+        <axis xyz="0 0 1" />
+    </joint>
+
+    <xacro:create_small_wheel_link prefix="front" />
+
+    <joint name="front_wheel_joint" type="continuous">
+        <parent link="front_hinge" />
+        <child link="front_wheel_link" />
+        <origin xyz="${-axis_dist} 0 0" rpy="0 0 0" />
+        <axis xyz="0 1 0" />
+    </joint>
+
+    <!-- Rear -->
+
+    <link name="rear_hinge">
+        <visual>
+            <geometry>
+                <cylinder radius="${hinge_r}" length="${hinge_l}" />
+            </geometry>
+            <origin xyz="0 0 ${(hinge_l) / 2.0}" rpy="0 0 0" />
+            <material name="grey" />
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${hinge_r}" length="${hinge_l}" />
+            </geometry>
+            <origin xyz="0 0 ${(hinge_l) / 2.0}" rpy="0 0 0" />
+        </collision>
+        <xacro:wheel_inertia mass="0.5" l="${2*hinge_l}" r="${2*hinge_r}" xyz="0 0 ${(hinge_l) / 2.0}" rpy="0 0 0" />
+    </link>
+
+    <joint name="rear_hinge_joint" type="continuous">
+        <parent link="base_link" />
+        <child link="rear_hinge" />
+        <origin xyz="-0.48 0 ${-((base_h / 2) + wheel_r - small_wheel_r + wheel_axis_h)}" rpy="0 0 0" />
+        <axis xyz="0 0 1" />
+    </joint>
+
+    <xacro:create_small_wheel_link prefix="rear" />
+
+    <joint name="rear_wheel_joint" type="continuous">
+        <parent link="rear_hinge" />
+        <child link="rear_wheel_link" />
+        <origin xyz="${-axis_dist} 0 0" rpy="0 0 0" />
+         <axis xyz="0 1 0" />
+    </joint>
+
+
+</robot>

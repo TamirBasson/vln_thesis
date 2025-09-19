@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Define Xacro properties -->
+    <xacro:property name="imu_l" value="0.05" />
+    <xacro:property name="imu_w" value="0.05" />
+    <xacro:property name="imu_h" value="0.02" />
+    <xacro:property name="base_l" value="1.0" />
+    <xacro:property name="base_w" value="0.7" />
+    <xacro:property name="base_h" value="0.3" />
+
+    <!-- IMU Link -->
+    <link name="imu_link">
+        <visual>
+            <geometry>
+                <box size="${imu_l} ${imu_w} ${imu_h}" />
+            </geometry>
+            <material name="Blue" />
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${imu_l} ${imu_w} ${imu_h}" />
+            </geometry>
+        </collision>
+        <xacro:box_inertia mass="0.1" l="${imu_l}" w="${imu_w}" h="${imu_h}" xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <!-- Joint connecting base_link to imu_link -->
+    <joint name="base_imu_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="imu_link" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </joint>
+
+    <!-- Gazebo Plugin for IMU -->
+    <gazebo reference="imu_link">
+        <sensor name="imu_sensor" type="imu">
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <update_rate>100.0</update_rate>
+            <plugin name="imu_controller" filename="libgazebo_ros_imu_sensor.so">
+                <ros>
+                    <argument>~/out:=imu</argument> <!--   the topic we are publishing on    -->
+                </ros>
+                <output_type>sensor_msgs/msg/Imu</output_type>
+                <frame_name>imu_link</frame_name>
+            </plugin>
+            <imu>
+                <topic>/imu</topic>
+                <gaussian_noise>0.01</gaussian_noise>
+            </imu>
+        </sensor>
+    </gazebo>
+    
+</robot>

@@ -1,0 +1,14 @@
+twist_mux:
+  ros__parameters:
+    topics:
+      navigation:
+        topic   : cmd_vel
+        timeout : 0.5
+        priority: 10
+      joystick:
+        topic   : cmd_vel_joy
+        timeout : 0.5
+        priority: 100
+  
+  #taking the commands from the joystick and navigation and publishing them to the /cmd_vel_out topic
+  

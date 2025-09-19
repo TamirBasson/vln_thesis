@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="lidar_radius" value="0.10" /><!--   was 0.05       -->
+    <xacro:property name="lidar_h" value="0.07" /> <!--   was 0.04       -->
+   
+    <!--   Lidar        -->
+   
+    <link name="lidar_link">
+        <visual>
+            <geometry>
+                <cylinder radius="${lidar_radius}" length="${lidar_h}" />
+            </geometry>
+            <material name="pink" />
+        </visual>
+        <collision>
+            <geometry>
+                <box radius="${lidar_radius}" length="${lidar_h}" />
+            </geometry>
+        </collision>
+        <xacro:wheel_inertia mass="0.1" l="${2*lidar_h}" r="${2*lidar_radius}" xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <joint name="base_lidar_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="lidar_link" />
+        <origin xyz="${base_l / 4.0} 0 ${(base_h / 2.0) + (lidar_h / 2.0)}" rpy="0 0 0" />
+    </joint>
+
+    <gazebo reference ="lidar_link">
+        <sensor name="laser_link" type="ray">
+            <pose> 0 0 0 0 0 0 </pose>
+            <visualize>true</visualize>
+            <update_rate>20.0</update_rate>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>500</samples>
+                        <min_angle>-3.14</min_angle>
+                        <max_angle>3.14</max_angle>
+                    </horizontal>
+                </scan>
+                <range>
+                    <min>0.5</min>
+                    <max>10</max>
+                </range>
+            </ray>
+            <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+                <ros>
+                    <argument>~/out:=scan</argument>   the topic we are publishing on   
+                </ros>
+                <output_type>sensor_msgs/LaserScan</output_type>
+                <frame_name>lidar_link</frame_name>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+    <!-- ${-(pi) / 12.0 * 11} = -2.87979327-->
+
+</robot>

@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Matches RViz gray on base_link -->
+  <material name="grey">
+    <color rgba="0.752941 0.752941 0.752941 1"/>
+  </material>
+
+  <!-- Light blue used for front_hinge & rear_hinge -->
+  <material name="blue">
+    <color rgba="0.792157 0.819608 0.933333 1"/>
+  </material>
+
+  <!-- Wheels dark gray/black -->
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1"/>
+  </material>
+
+  <!-- Camera pale yellow -->
+  <material name="yellow">
+    <color rgba="1 0.95 0.6 1"/>
+  </material>
+
+  <!-- Lidar light blue -->
+  <material name="cyan">
+    <color rgba="0.6 0.8 1 1"/>
+  </material>
+
+  <!-- Keep other colors available (not used by current URDF visuals) -->
+  <material name="green"><color rgba="0 0.5 0 1"/></material>
+  <material name="pink"><color rgba="1 0 1 1"/></material>
+  <material name="orange"><color rgba="1 0.5 0 1"/></material>
+  <material name="red"><color rgba="1 0 0.2 1"/></material>
+
+  <!-- inertia macros unchanged -->
+  <xacro:macro name="box_inertia" params="mass l w h xyz rpy">
+    <inertial>
+      <origin xyz="${xyz}" rpy="0 0 0" />
+      <mass value="${mass}" />
+      <inertia ixx="${mass/12 * (h*h + l*l)}" ixy="0" ixz="0"
+               iyy="${mass/12 * (w*w + l*l)}" iyz="0"
+               izz="${mass/12 * (h*h + w*w)}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="wheel_inertia" params="mass l r xyz rpy">
+    <inertial>
+      <origin xyz="${xyz}" rpy="${rpy}" />
+      <mass value="${mass}" />
+      <inertia ixx="${mass/12 * (3*r*r + l*l)}" ixy="0" ixz="0"
+               iyy="${mass/12 * (3*r*r + l*l)}" iyz="0"
+               izz="${mass/2 * (r*r)}" />
+    </inertial>
+  </xacro:macro>
+
+</robot>

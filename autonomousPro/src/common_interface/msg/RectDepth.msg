@@ -1,0 +1,6 @@
+std_msgs/Int32MultiArray rect
+std_msgs/Int32MultiArray center
+float32 frame
+float32 depth
+std_msgs/Float32MultiArray coordinate_diff
+float32 theta

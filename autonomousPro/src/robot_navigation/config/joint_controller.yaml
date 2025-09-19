@@ -1,0 +1,27 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 30   # You can adjust this as needed, e.g. 100 for more frequent updates
+    use_sim_time: false
+
+    diff_cont:
+      type: diff_drive_controller/DiffDriveController
+
+    joint_broad:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+diff_cont:
+  ros__parameters:
+    # Disable odometry publishing
+    publish_odom: true
+    enable_odom_tf: true
+    
+    base_frame_id: "base_footprint"
+    left_wheel_names: ["left_wheel_joint"]
+    right_wheel_names: ["right_wheel_joint"]
+    wheel_separation: 0.77
+    wheel_radius: 0.16
+    use_stamped_vel: false
+
+
+    # If you decide to re-enable odom in the future, set an appropriate publish rate
+    # publish_rate: 50.0 #Hz
