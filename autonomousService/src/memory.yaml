@@ -2,74 +2,18 @@ edges: []
 nodes:
 - features:
   - Coordinate relative to the camera frame:
-    - 2.0
-    - -0.42415203709299576
+    - 1.09
+    - 0.18593552344079428
+    - 0.004178326369456051
     Coordinate relative to the world frame:
-    - 6.454837994277556
-    - 0.5957249059789964
-    object: trash bin
-  - Coordinate relative to the camera frame:
-    - 3.354
-    - -1.3869699480451123
-    Coordinate relative to the world frame:
-    - 8.818972886596912
-    - -1.6802022348913899
-    object: door
-  - Coordinate relative to the camera frame:
-    - 2.461
-    - 0.17375979231041655
-    Coordinate relative to the world frame:
-    - 7.432923921504595
-    - 0.27816815760702773
-    object: basket
-  - Coordinate relative to the camera frame:
-    - 3.718
-    - 1.0477476142666367
-    Coordinate relative to the world frame:
-    - 8.266319905059117
-    - 4.122972189087978
-    object: fire extinguisher
-  - Coordinate relative to the camera frame:
-    - 1.487
-    - -0.07377818284611416
-    Coordinate relative to the world frame:
-    - 7.643926144521417
-    - -0.4361347334906762
-    object: trash basket
-  name: hallway
+    - 5.827624539499994
+    - 1.6361161203988954
+    - 0.004178326369456051
+    confidence: 0.6767909526824951
+    depth: 1.09
+    object: chair
+  name: office
   pose:
-  - 8.45246696472168
-  - -0.601801335811615
-  - 1.1613112688064575
-- features: []
-  name: corridor
-  pose:
-  - 5.940179347991943
-  - -0.1006796807050705
-  - -0.062321990728378296
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.387
-    - -0.0029713711996413998
-    Coordinate relative to the world frame:
-    - 6.5426875621688225
-    - -0.025865055951246413
-    object: bucket
-  name: storage room
-  pose:
-  - 4.410566806793213
-  - 0.23658473789691925
-  - -0.2882608473300934
-- features:
-  - Coordinate relative to the camera frame:
-    - 2.343
-    - -0.6567650527834369
-    Coordinate relative to the world frame:
-    - 9.284326024197105
-    - -1.4084842977337444
-    object: fire extinguisher
-  name: lab hallway
-  pose:
-  - 7.072765827178955
-  - -0.39359965920448303
-  - -0.1569347083568573
+  - 4.769210338592529
+  - 1.3199561834335327
+  - 0.12019724398851395

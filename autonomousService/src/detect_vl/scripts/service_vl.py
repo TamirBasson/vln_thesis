@@ -34,9 +34,21 @@ class GroundingDINOInfer:
         )
 
         image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-        # print(results)
+        
+        # Debug: print available keys
+        print("Available keys in results[0]:", results[0].keys())
+        
         boxes = results[0]['boxes'].cpu().numpy()
-        labels = results[0]['text_labels']  # Use text_labels instead of labels to avoid FutureWarning
+        
+        # Try different possible keys for labels
+        if 'labels' in results[0]:
+            labels = results[0]['labels']
+        elif 'text_labels' in results[0]:
+            labels = results[0]['text_labels']
+        else:
+            print("Warning: No labels found in results. Available keys:", list(results[0].keys()))
+            labels = []
+            
         scores = results[0]['scores'].cpu().numpy()
 
         rect = None

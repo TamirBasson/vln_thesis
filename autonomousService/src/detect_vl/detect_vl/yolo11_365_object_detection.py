@@ -23,6 +23,9 @@ from common_interface.msg import RectDepth, Camera2map
 # CV Bridge for image conversion
 from cv_bridge import CvBridge
 
+# Import MemoryBuilder for semantic map construction
+from scripts.memory_builder import MemoryBuilder
+
 class YOLOv11Object365Detector(Node):
     """
     ROS2 Node for YOLOv11 Object365 object detection.
@@ -34,6 +37,13 @@ class YOLOv11Object365Detector(Node):
         
         # Initialize CV Bridge
         self.bridge = CvBridge()
+        
+        # ============================================================================
+        # SEMANTIC MAP BUILDER INTEGRATION
+        # ============================================================================
+        # Initialize MemoryBuilder for semantic map construction
+        self.memory_builder = MemoryBuilder(use_simulation=True)  # Change to False for real hardware
+        self.environment_context = ""  # Will be set by navigation node
         
         # Initialize model
         self.model = None
@@ -76,8 +86,30 @@ class YOLOv11Object365Detector(Node):
         # Initialize publishers
         self.setup_publishers()
         
+        # ============================================================================
+        # SEMANTIC MAP SUBSCRIPTIONS
+        # ============================================================================
+        # Subscribe to camera2map for pose tracking (for map building)
+        self.camera2map_sub = self.create_subscription(
+            Camera2map,
+            '/camera2map',
+            self.camera2map_callback,
+            10
+        )
+        
+        # Subscribe to environment context updates
+        self.context_sub = self.create_subscription(
+            String,
+            '/environment_context',
+            self.context_callback,
+            10
+        )
+        
         # Detection timer
         self.detection_timer = self.create_timer(0.1, self.process_detections)  # 10 FPS
+        
+        # Semantic map building timer (less frequent than detection)
+        self.map_timer = self.create_timer(2.0, self.update_semantic_map)  # 0.5 FPS
         
         self.get_logger().info("🚀 YOLOv11 Object365 Detector initialized successfully!")
         self.get_logger().info(f"📊 Model: {self.model_path}")
@@ -254,6 +286,27 @@ class YOLOv11Object365Detector(Node):
         except Exception as e:
             self.get_logger().error(f"Point cloud processing failed: {e}")
     
+    # ============================================================================
+    # SEMANTIC MAP BUILDING CALLBACKS
+    # ============================================================================
+    
+    def camera2map_callback(self, msg):
+        """Handle camera to map transformation updates for map building"""
+        try:
+            wx, wy, yaw = msg.coordinate.data
+            # Suppress frequent pose logging - only log errors, not every update
+            self.memory_builder.update_camera_pose(wx, wy, yaw, None)
+        except Exception as e:
+            self.get_logger().error(f"Error processing camera pose for mapping: {e}")
+    
+    def context_callback(self, msg):
+        """Handle environment context updates"""
+        try:
+            self.environment_context = msg.data
+            self.get_logger().info(f"🌍 Environment context updated: {self.environment_context}")
+        except Exception as e:
+            self.get_logger().error(f"Error processing context update: {e}")
+    
     def process_detections(self):
         """Main detection processing function"""
         if self.rgb_image is None or self.model is None:
@@ -324,7 +377,7 @@ class YOLOv11Object365Detector(Node):
         return detections
     
     def get_depth_at_point(self, x: int, y: int) -> Optional[float]:
-        """Get depth value at specific pixel coordinates"""
+        """Get depth value at specific pixel coordinates - RAW VALUE ONLY"""
         if self.depth_image is None:
             return None
         
@@ -332,18 +385,11 @@ class YOLOv11Object365Detector(Node):
             with self.depth_lock:
                 if (0 <= x < self.depth_image.shape[1] and 
                     0 <= y < self.depth_image.shape[0]):
-                    depth_value = self.depth_image[y, x]
-                    # Handle different depth formats
-                    if depth_value > 0:
-                        if self.depth_image.dtype == np.uint16:
-                            # Already converted to mm, convert to meters
-                            return float(depth_value) / 1000.0
-                        elif self.depth_image.dtype == np.float32:
-                            # Already in meters
-                            return float(depth_value)
-                        else:
-                            # Default: assume mm
-                            return float(depth_value) / 1000.0
+                    depth_raw = self.depth_image[y, x]
+                    # Return RAW depth value without any unit conversion
+                    # MemoryBuilder will handle simulation vs hardware conversion
+                    if depth_raw > 0:
+                        return float(depth_raw)
         except Exception as e:
             self.get_logger().debug(f"Depth extraction failed: {e}")
         
@@ -450,10 +496,38 @@ class YOLOv11Object365Detector(Node):
             # Draw center point
             cv2.circle(vis_image, (center_x, center_y), 5, (0, 0, 255), -1)
             
-            # Draw label with background
+            # Draw distance indicator at center point
+            if depth is not None:
+                # Convert raw depth to meters for center display
+                if depth > 100:  # Likely raw mm values from simulation
+                    depth_m = depth / 1000.0
+                    center_text = f"{depth_m:.2f}m"
+                else:  # Already in reasonable meter range
+                    center_text = f"{depth:.2f}m"
+                
+                # Draw distance text near center point with background
+                text_size = cv2.getTextSize(center_text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)[0]
+                text_x = center_x - text_size[0] // 2
+                text_y = center_y + 20
+                
+                # Background rectangle for center distance
+                cv2.rectangle(vis_image, (text_x - 2, text_y - text_size[1] - 2), 
+                             (text_x + text_size[0] + 2, text_y + 2), (0, 0, 0), -1)
+                # Distance text in white
+                cv2.putText(vis_image, center_text, (text_x, text_y), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+            
+            # Draw label with background showing confidence and distance
             label = f"{class_name}: {confidence:.2f}"
             if depth is not None:
-                label += f" | {depth:.2f}m"
+                # Convert raw depth to meters for display
+                if depth > 100:  # Likely raw mm values from simulation
+                    depth_m = depth / 1000.0
+                    label += f" | {depth_m:.2f}m"
+                else:  # Already in reasonable meter range
+                    label += f" | {depth:.2f}m"
+            else:
+                label += " | No depth"
             
             # Calculate text size for background
             (text_width, text_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
@@ -489,6 +563,200 @@ class YOLOv11Object365Detector(Node):
         except Exception as e:
             self.get_logger().error(f"Visualization publishing failed: {e}")
     
+    # ============================================================================
+    # SEMANTIC MAP BUILDING METHODS
+    # ============================================================================
+    
+    def update_semantic_map(self):
+        """Update semantic map using YOLO Object365 detections"""
+        if self.rgb_image is None or self.depth_image is None or self.model is None:
+            return
+            
+        try:
+            # Run YOLO detection for map building (less frequent than main detection)
+            with self.rgb_lock:
+                rgb_copy = self.rgb_image.copy()
+            
+            with self.depth_lock:
+                depth_copy = self.depth_image.copy()
+            
+            # Detect objects
+            results = self.model.predict(
+                source=rgb_copy,
+                imgsz=640,
+                conf=0.5,  # Slightly lower confidence for map building
+                iou=self.nms_threshold,
+                max_det=self.max_detections,
+                verbose=False,
+                device='cuda' if torch.cuda.is_available() else 'cpu'
+            )
+            
+            # Process detections for map building
+            detections = self.process_yolo_results(results[0], rgb_copy)
+            
+            # Filter for static landmark objects
+            landmark_detections = self.filter_landmark_objects(detections)
+            
+            # Build semantic map features with coordinates
+            if landmark_detections:
+                features_with_coords = self.process_landmark_coordinates(landmark_detections, depth_copy)
+                
+                if features_with_coords:
+                    # Classify room type based on detected objects
+                    room_type = self.classify_room_type(landmark_detections)
+                    
+                    # Save to memory system
+                    self.save_semantic_features(room_type, features_with_coords)
+                    
+        except Exception as e:
+            self.get_logger().error(f"Semantic map update failed: {e}")
+    
+    def filter_landmark_objects(self, detections):
+        """Filter detections to keep only static landmark objects suitable for navigation"""
+        # Define static landmark object classes (Object365 class names)
+        landmark_classes = {
+            # Furniture
+            'chair', 'table', 'sofa', 'bed', 'desk', 'cabinet', 'shelf', 'bookshelf',
+            'dresser', 'wardrobe', 'nightstand', 'bench', 'stool',
+            
+            # Appliances & Electronics
+            'refrigerator', 'oven', 'microwave', 'dishwasher', 'washing_machine',
+            'television', 'computer', 'printer', 'air_conditioner',
+            
+            # Architectural elements
+            'door', 'window', 'stairs', 'elevator', 'pillar', 'wall', 'fireplace',
+            
+            # Storage & Equipment
+            'trash_can', 'vase', 'plant', 'picture_frame', 'mirror', 'clock',
+            'whiteboard', 'blackboard', 'projector_screen',
+            
+            # Kitchen items
+            'kitchen_island', 'kitchen_cabinet', 'kitchen_counter', 'sink',
+            
+            # Bathroom fixtures
+            'toilet', 'bathtub', 'shower', 'bathroom_sink'
+        }
+        
+        landmark_detections = []
+        for detection in detections:
+            class_name = detection['class_name'].lower()
+            
+            # Check if it's a landmark class and has good confidence
+            if (class_name in landmark_classes and 
+                detection['confidence'] > 0.6 and  # Higher confidence for landmarks
+                detection['depth'] is not None and
+                detection['depth'] > 0.5 and  # Must be reasonably far to be a landmark
+                detection['area'] > 2000):  # Must have reasonable size
+                
+                landmark_detections.append(detection)
+        
+        return landmark_detections
+    
+    def process_landmark_coordinates(self, landmark_detections, depth_image):
+        """Convert landmark detections to world coordinates"""
+        features_with_coords = []
+        
+        for detection in landmark_detections:
+            center_x, center_y = detection['center']
+            class_name = detection['class_name']
+            
+            # Convert pixel coordinates to camera frame coordinates
+            result = self.memory_builder.pix2camera_frame(
+                [center_x, center_y], 
+                depth_image, 
+                self.get_logger()
+            )
+            
+            # Handle different return formats: simulation (4 values) vs hardware (3 values)
+            if len(result) == 4:  # Simulation: (dis, wx, wy, wz)
+                dis, wx, wy, wz = result
+                coords = [wx, wy, wz]
+                coord_str = f"({wx:.2f}, {wy:.2f}, {wz:.2f})"
+            else:  # Real hardware: (dis, wx, wy)
+                dis, wx, wy = result
+                coords = [wx, wy]
+                coord_str = f"({wx:.2f}, {wy:.2f})"
+            
+            if dis is not None and dis > 0:
+                features_with_coords.append({
+                    "object": class_name,
+                    "Coordinate relative to the camera frame": coords,
+                    "confidence": detection['confidence'],
+                    "depth": dis
+                })
+                
+                self.get_logger().info(
+                    f"🏗️ LANDMARK: {class_name} detected at {coord_str}, "
+                    f"depth: {dis:.2f}m, confidence: {detection['confidence']:.2f}"
+                )
+        
+        return features_with_coords
+    
+    def classify_room_type(self, detections):
+        """Classify room type based on detected landmark objects"""
+        class_counts = {}
+        for detection in detections:
+            class_name = detection['class_name'].lower()
+            class_counts[class_name] = class_counts.get(class_name, 0) + 1
+        
+        # Room type classification rules
+        if any(cls in class_counts for cls in ['bed', 'dresser', 'nightstand', 'wardrobe']):
+            return 'bedroom'
+        elif any(cls in class_counts for cls in ['sofa', 'television', 'coffee_table']):
+            return 'living_room'
+        elif any(cls in class_counts for cls in ['refrigerator', 'oven', 'microwave', 'kitchen_cabinet']):
+            return 'kitchen'
+        elif any(cls in class_counts for cls in ['toilet', 'bathtub', 'shower', 'bathroom_sink']):
+            return 'bathroom'
+        elif any(cls in class_counts for cls in ['desk', 'computer', 'chair', 'bookshelf']):
+            return 'office'
+        elif any(cls in class_counts for cls in ['table', 'chair']) and len(class_counts) >= 2:
+            return 'dining_room'
+        else:
+            # Default based on environment context
+            if self.environment_context.lower() in ['warehouse', 'factory']:
+                return 'warehouse'
+            elif self.environment_context.lower() in ['hospital', 'clinic']:
+                return 'corridor'
+            elif self.environment_context.lower() in ['office', 'workplace']:
+                return 'office'
+            else:
+                return 'room'
+    
+    def save_semantic_features(self, room_type, features_with_coords):
+        """Save detected semantic features to memory system"""
+        try:
+            if not features_with_coords:
+                return
+                
+            # Get current camera pose
+            room_pose = (self.memory_builder.camera_pose 
+                        if self.memory_builder.camera_pose 
+                        else [0.0, 0.0, 0.0])
+            
+            # Check if we can classify a new room
+            if self.memory_builder.can_classify_new_room(room_type, self.get_logger()):
+                self.memory_builder.save_to_memory(room_type, features_with_coords, room_pose)
+                self.get_logger().info(
+                    f"🗺️ YOLO MAP: Room '{room_type}' classified and saved with "
+                    f"{len(features_with_coords)} landmarks at pose {room_pose}"
+                )
+            else:
+                # Add features to existing room
+                if self.memory_builder.last_room_type:
+                    self.memory_builder.save_to_memory(
+                        self.memory_builder.last_room_type, 
+                        features_with_coords, 
+                        room_pose
+                    )
+                    self.get_logger().info(
+                        f"🗺️ YOLO MAP: Added {len(features_with_coords)} landmarks to "
+                        f"existing room '{self.memory_builder.last_room_type}'"
+                    )
+                    
+        except Exception as e:
+            self.get_logger().error(f"Error saving semantic features: {e}")
+
     def cleanup(self):
         """Cleanup function to close debug windows"""
         if self.enable_debug_window:

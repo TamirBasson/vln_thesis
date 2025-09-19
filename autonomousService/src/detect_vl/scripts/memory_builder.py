@@ -7,8 +7,9 @@ import cv2
 from typing import List, Dict, Any, Tuple
 
 class MemoryBuilder:
-    def __init__(self, memory_file: str = "src/memory.yaml"):
+    def __init__(self, memory_file: str = "src/memory.yaml", use_simulation: bool = True):
         self.memory_file = memory_file
+        self.use_simulation = use_simulation  # True for simulation, False for real hardware
         self.memory_data = {
             "nodes": [],
             "edges": []
@@ -243,7 +244,8 @@ class MemoryBuilder:
         
     #     if rect is not None and center is not None:
     #         # Calculate distance to door
-    #         dis, wx, wy = self.pix2camera_frame(center, depth_image, logger)
+    #         result = self.pix2camera_frame(center, depth_image, logger)
+    #         # Handle return format based on simulation vs hardware
             
     #         if dis is not None and dis > 0:
     #             if logger:
@@ -268,32 +270,82 @@ class MemoryBuilder:
     #         if self.door_detected and (current_time - self.last_door_detection_time) > self.door_detection_threshold:
     #             self.door_detected = False
 
-    def pix2camera_frame(self, pix_xy, depth_image, logger=None):
+    def pix2camera_frame(self, pix_xy, depth_image, logger=None, use_simulation=None):
         """Convert pixel coordinates to camera frame coordinates for navigation"""
         if depth_image is None:
             if logger:
                 logger.warn("⚠️ Depth image not yet received.")
             return None, None, None
 
-        center_depth_mm = depth_image[pix_xy[1], pix_xy[0]]  # Access depth image using (row, col)
-        center_depth_m = center_depth_mm / 1000.0
-
-        if logger:
-            logger.info(f" Center depth at ({pix_xy[0]},{pix_xy[1]}): {center_depth_m:.3f} m")
+        depth_raw = depth_image[pix_xy[1], pix_xy[0]]  # Access depth image using (row, col)
         
-        # Camera intrinsic parameters
-        cx, cy = 211.73, 123.504  # Principal point
-        fx, fy = 307.767, 307.816  # Focal lengths
+        # ============================================================================
+        # DEPTH VALUE CONVERSION - SIMULATION vs REAL HARDWARE
+        # ============================================================================
+        # Use instance configuration or explicit parameter
+        if use_simulation is None:
+            use_simulation = self.use_simulation  # Use instance setting
+        
+        # Debug: Log depth image properties
+        if logger:
+            logger.info(f"🔍 DEBUG - Depth image dtype: {depth_image.dtype}, raw value: {depth_raw}")
+        
+        if use_simulation:
+            # SIMULATION: Check if Gazebo provides depth in mm or meters
+            # Large values (>100) suggest millimeters, small values suggest meters
+            if depth_raw > 100:  # Likely millimeters
+                center_depth_m = float(depth_raw) / 1000.0  # Convert mm to meters
+                if logger:
+                    logger.info(f"🎮 SIMULATION depth at ({pix_xy[0]},{pix_xy[1]}): {center_depth_m:.3f} m (converted from mm: {depth_raw})")
+            else:  # Likely already in meters
+                center_depth_m = float(depth_raw)  # Already in meters
+                if logger:
+                    logger.info(f"🎮 SIMULATION depth at ({pix_xy[0]},{pix_xy[1]}): {center_depth_m:.3f} m (no conversion)")
+        else:
+            # REAL HARDWARE: RealSense provides depth in millimeters (uint16) 
+            center_depth_m = float(depth_raw) / 1000.0  # Convert mm to meters
+            if logger:
+                logger.info(f"🔧 HARDWARE depth at ({pix_xy[0]},{pix_xy[1]}): {center_depth_m:.3f} m (converted from mm)")
+        
+        # ============================================================================
+        # CAMERA INTRINSIC PARAMETERS - ALREADY DETERMINED ABOVE
+        # ============================================================================
+        
+        if use_simulation:
+            # SIMULATION CAMERA PARAMETERS (from Gazebo URDF)
+            # horizontal_fov = 1.089 radians, width = 640, height = 480
+            cx, cy = 320.0, 240.0  # Image center
+            fx = fy = 521.74  # Calculated from FOV: fx = (640/2) / tan(1.089/2)
+            if logger:
+                logger.info("🎮 Using SIMULATION camera parameters")
+        else:
+            # REAL HARDWARE CAMERA PARAMETERS (RealSense)
+            cx, cy = 211.73, 123.504  # Principal point  
+            fx, fy = 307.767, 307.816  # Focal lengths
+            if logger:
+                logger.info("🔧 Using REAL HARDWARE camera parameters")
         
         pix_x, pix_y = pix_xy 
         
-        # Convert to camera frame coordinates for navigation
-        wx = center_depth_m  # Forward distance (X-axis)
-        wy = -(pix_x - cx) * center_depth_m / fx  # Lateral offset (Y-axis) added (- 30.7 update)
-        
-        if logger:
-            logger.info(f"Camera frame coordinates: wx={wx:.3f}, wy={wy:.3f}")
-        return center_depth_m, wx, wy
+        if use_simulation:
+            # SIMULATION: Full 3D coordinate calculation
+            # X = d, Y = -(u-cx)*d/fx, Z = -(v-cy)*d/fy
+            wx = center_depth_m                              # Forward distance (X-axis)
+            wy = -(pix_x - cx) * center_depth_m / fx        # Lateral offset (Y-axis)  
+            wz = -(pix_y - cy) * center_depth_m / fy        # Vertical offset (Z-axis)
+            
+            if logger:
+                logger.info(f"🎮 SIMULATION coordinates: wx={wx:.3f}, wy={wy:.3f}, wz={wz:.3f}")
+            return center_depth_m, wx, wy, wz
+            
+        else:
+            # REAL HARDWARE: Keep the working 2D calculation
+            wx = center_depth_m                              # Forward distance (X-axis)
+            wy = -(pix_x - cx) * center_depth_m / fx        # Lateral offset (Y-axis)
+            
+            if logger:
+                logger.info(f"🔧 HARDWARE coordinates: wx={wx:.3f}, wy={wy:.3f}")
+            return center_depth_m, wx, wy
 
 
 def convert_numpy(obj):
