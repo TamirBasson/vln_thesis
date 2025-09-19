@@ -102,7 +102,7 @@ class ServiceNode(Node):
         #For Simulation only --------------------------------
         self.create_subscription(
             Image, 
-            '/camera/camera/color/image_raw', 
+            '/camera/camera/image_raw', 
             self.rgb_callback, 10
         )
         self.create_subscription(
@@ -146,7 +146,7 @@ class ServiceNode(Node):
     def rgb_callback(self, msg):
         """Handle RGB image messages"""
         try:
-            self.rgb_image = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            self.rgb_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             self.update_flag = 1
         except Exception as e:
             self.get_logger().error(f"Error processing RGB image: {e}")
