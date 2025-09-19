@@ -218,7 +218,7 @@
       effort="100"
       velocity="100" />
     <dynamics
-      friction="0.1" />
+      friction="0.5" />
   </joint>
 
   <link
@@ -381,7 +381,7 @@
       effort="100"
       velocity="100" />
     <dynamics
-      friction="0.1" />
+      friction="0.5" />
   </joint>
 
   <link
@@ -565,6 +565,47 @@
         <max_depth>100.0</max_depth>
       </plugin>
     </sensor>
+  </gazebo>
+
+  <!-- Gazebo friction properties for wheels -->
+  <gazebo reference="left_wheel_link">
+    <mu1>1.5</mu1>
+    <mu2>1.5</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <fdir1>1 0 0</fdir1>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+  </gazebo>
+
+  <gazebo reference="right_wheel_link">
+    <mu1>1.5</mu1>
+    <mu2>1.5</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <fdir1>1 0 0</fdir1>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+  </gazebo>
+
+  <gazebo reference="front_wheel_link">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <fdir1>1 0 0</fdir1>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+  </gazebo>
+
+  <gazebo reference="rear_wheel_link">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <fdir1>1 0 0</fdir1>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
   </gazebo>
 
 </robot> 
