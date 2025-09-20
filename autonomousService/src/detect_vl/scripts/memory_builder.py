@@ -433,15 +433,14 @@ class MemoryBuilder:
         pix_x, pix_y = pix_xy 
         
         if use_simulation:
-            # SIMULATION: Full 3D coordinate calculation
-            # X = d, Y = -(u-cx)*d/fx, Z = -(v-cy)*d/fy
+            # SIMULATION: 2D coordinate calculation (same as hardware)
+            # X = d, Y = -(u-cx)*d/fx
             wx = center_depth_m                              # Forward distance (X-axis)
-            wy = -(pix_x - cx) * center_depth_m / fx        # Lateral offset (Y-axis)  
-            wz = -(pix_y - cy) * center_depth_m / fy        # Vertical offset (Z-axis)
+            wy = -(pix_x - cx) * center_depth_m / fx        # Lateral offset (Y-axis)
             
             if logger:
-                logger.info(f"🎮 SIMULATION coordinates: wx={wx:.3f}, wy={wy:.3f}, wz={wz:.3f}")
-            return center_depth_m, wx, wy, wz
+                logger.info(f"🎮 SIMULATION coordinates: wx={wx:.3f}, wy={wy:.3f}")
+            return center_depth_m, wx, wy
             
         else:
             # REAL HARDWARE: Keep the working 2D calculation

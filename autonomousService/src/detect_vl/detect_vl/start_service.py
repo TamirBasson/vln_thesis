@@ -46,6 +46,11 @@ class ServiceNode(Node):
         # Initialize core components
         self.bridge = CvBridge()
         self.VL = GroundingDINOInfer()
+        
+        # Configure for simulation mode (lower thresholds for better detection)
+        self.VL.set_simulation_mode()
+        self.get_logger().info("🎮 Configured GroundingDINO for simulation mode")
+        
         self.memory_builder = MemoryBuilder()
         
         # Image data
@@ -102,7 +107,7 @@ class ServiceNode(Node):
         #For Simulation only --------------------------------
         self.create_subscription(
             Image, 
-            '/camera/camera/color/image_raw', 
+            '/camera/camera/image_raw', 
             self.rgb_callback, 10
         )
         self.create_subscription(
@@ -146,7 +151,7 @@ class ServiceNode(Node):
     def rgb_callback(self, msg):
         """Handle RGB image messages"""
         try:
-            self.rgb_image = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            self.rgb_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             self.update_flag = 1
         except Exception as e:
             self.get_logger().error(f"Error processing RGB image: {e}")
@@ -287,7 +292,12 @@ class ServiceNode(Node):
             cv2.waitKey(1)
 
         if rect is None:
-            print("no object found")
+            print(f"❌ No object found for '{obj}'")
+            print("💡 Troubleshooting suggestions:")
+            print("   1. Check if the object is clearly visible in the camera view")
+            print("   2. Try using more descriptive terms (e.g., 'blue exercise ball' instead of 'ball')")
+            print("   3. Ensure good lighting in the simulation environment")
+            print("   4. The object might be too far away or partially occluded")
             return False
         
         dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
