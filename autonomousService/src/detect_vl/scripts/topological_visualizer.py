@@ -1,331 +1,274 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import math
+import itertools
+import textwrap
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import Dict, Tuple, List, Any, Optional
 
 import yaml
-import os
-import time
-import threading
+import networkx as nx
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.animation import FuncAnimation
-import numpy as np
-from typing import Dict, Any, List, Tuple, Optional
-import math
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
 
-def find_workspace_root():
-    """Find the workspace root directory by looking for common workspace markers"""
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Look for workspace root by going up directories
-    while current_dir != os.path.dirname(current_dir):  # Stop at filesystem root
-        # Check if this looks like a workspace root
-        if (os.path.exists(os.path.join(current_dir, 'src')) and 
-            os.path.exists(os.path.join(current_dir, 'README.md'))):
-            return current_dir
-        current_dir = os.path.dirname(current_dir)
-    
-    # If we can't find workspace root, use current working directory
-    return os.getcwd()
+# ===========================
+# Appearance / theme
+# ===========================
+ROOM_NODE_SIZE = 1467
+OBJECT_NODE_SIZE = 240
+DOOR_NODE_SIZE = 143
 
-class TopologicalVisualizer:
-    def __init__(self, memory_file: Optional[str] = None, update_interval: float = 1.0):
-        """
-        Initialize the topological graph visualizer
-        
-        Args:
-            memory_file: Path to the memory.yaml file
-            update_interval: How often to update the visualization (seconds)
-        """
-        if memory_file is None:
-            # Use workspace root to construct the path
-            workspace_root = find_workspace_root()
-            self.memory_file = os.path.join(workspace_root, "src", "memory.yaml")
+FONT_ROOM = 12
+FONT_OBJECT = 9
+FONT_DISTANCE = 10.5
+FONT_TITLE = 20
+
+PALETTE_ROOMS = [
+    "#56c6c6", "#f28b82", "#a78bfa", "#7dc4ff", "#ffd166",
+    "#f48fb1", "#90caf9", "#ffe082", "#b0bec5", "#80cbc4",
+    "#c5e1a5", "#ce93d8"
+]
+COLOR_OBJECT = "#ff6b6b"
+COLOR_DOOR = "#ffa43a"
+COLOR_ROOM_EDGE = "#546e7a"
+COLOR_OBJ_EDGE = "#9e9e9e"
+
+ROOM_EDGE_WIDTH = 2.4
+OBJ_EDGE_WIDTH = 1.25
+ROOM_NODE_EDGE = "#455a64"
+OBJECT_NODE_EDGE = "#c62828"
+DOOR_NODE_EDGE = "#ef6c00"
+DPI = 220
+
+
+# ===========================
+# Data structures
+# ===========================
+@dataclass
+class ObjFeat:
+    name: str
+    world_xy: Optional[Tuple[float, float]]  # None if not provided
+
+@dataclass
+class Room:
+    id: str
+    name: str
+    xy: Tuple[float, float]
+    objects: List[ObjFeat]
+
+@dataclass
+class Edge:
+    a: str
+    b: str
+    cost: Optional[float]
+
+
+# ===========================
+# YAML parsing for YOUR schema
+# ===========================
+def load_yaml(path: str):
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    return data
+
+def parse_rooms(data: Dict[str, Any]) -> Dict[str, Room]:
+    rooms: Dict[str, Room] = {}
+    for n in data.get("nodes", []):
+        name = n["name"]
+        pose = n.get("pose", [0.0, 0.0, 0.0])
+        xy = (float(pose[0]), float(pose[1]))
+
+        feats: List[ObjFeat] = []
+        for f in n.get("features", []):
+            obj_name = f.get("object", "object")
+            wf = f.get("Coordinate relative to the world frame")
+            if isinstance(wf, list) and len(wf) >= 2:
+                feats.append(ObjFeat(obj_name, (float(wf[0]), float(wf[1]))))
+            else:
+                feats.append(ObjFeat(obj_name, None))
+
+        rooms[name] = Room(id=name, name=name, xy=xy, objects=feats)
+    return rooms
+
+def parse_edges(data: Dict[str, Any]) -> List[Edge]:
+    raw = data.get("edges", [])
+    # Deduplicate opposite directions; keep min cost if both present
+    best: Dict[Tuple[str, str], float] = {}
+    for e in raw:
+        a, b = e["from"], e["to"]
+        key = tuple(sorted((a, b)))
+        cost = float(e["cost"]) if "cost" in e and e["cost"] is not None else None
+        if key not in best:
+            best[key] = cost if cost is not None else float("inf")
         else:
-            self.memory_file = memory_file
-            
-        self.update_interval = update_interval
-        self.fig, self.ax = plt.subplots(figsize=(12, 8))
-        self.last_modified_time = 0
-        self.animation = None
-        
-        # Visualization parameters
-        self.room_radius = 0.5  # Radius for room circles
-        self.feature_radius = 0.25  # Radius for feature circles (half of room radius)
-        self.door_radius = 0.15  # Radius for door circles
-        
-        # Colors
-        self.room_color = 'blue'
-        self.feature_color = 'red'
-        self.door_color = 'yellow'
-        self.edge_color = 'black'
-        
-        # Setup matplotlib
-        self.fig, self.ax = plt.subplots(figsize=(12, 10))
-        self.ax.set_aspect('equal')
-        self.ax.grid(True, alpha=0.3)
-        self.ax.set_xlabel('X (meters)')
-        self.ax.set_ylabel('Y (meters)')
-        self.ax.set_title('Topological Graph Visualization')
-        
-        # Store current visualization elements
-        self.room_patches = {}
-        self.feature_patches = {}
-        self.door_patches = {}
-        self.edge_lines = {}
-        self.text_annotations = {}
-        
-        # Animation
-        self.ani = None
-        
-    def load_memory(self) -> Dict[str, Any]:
-        """Load memory data from YAML file"""
-        if not os.path.exists(self.memory_file):
-            return {"nodes": [], "edges": []}
-            
-        try:
-            with open(self.memory_file, 'r') as f:
-                data = yaml.safe_load(f)
-                return data or {"nodes": [], "edges": []}
-        except Exception as e:
-            print(f"Error reading memory file: {e}")
-            return {"nodes": [], "edges": []}
-    
-    def clear_visualization(self):
-        """Clear all visualization elements"""
-        # Clear patches
-        for patch in self.room_patches.values():
-            if patch in self.ax.patches:
-                patch.remove()
-        for patch in self.feature_patches.values():
-            if patch in self.ax.patches:
-                patch.remove()
-        for patch in self.door_patches.values():
-            if patch in self.ax.patches:
-                patch.remove()
-        
-        # Clear lines
-        for line in self.edge_lines.values():
-            if line in self.ax.lines:
-                line.remove()
-        
-        # Clear text
-        for text in self.text_annotations.values():
-            if text in self.ax.texts:
-                text.remove()
-        
-        # Clear collections
-        self.room_patches.clear()
-        self.feature_patches.clear()
-        self.door_patches.clear()
-        self.edge_lines.clear()
-        self.text_annotations.clear()
-    
-    def calculate_door_position(self, room1_pos: List[float], room2_pos: List[float]) -> Tuple[float, float]:
-        """Calculate door position at the midpoint between two rooms"""
-        x1, y1 = room1_pos[0], room1_pos[1]
-        x2, y2 = room2_pos[0], room2_pos[1]
-        
-        # Door at midpoint
-        door_x = (x1 + x2) / 2.0
-        door_y = (y1 + y2) / 2.0
-        
-        return door_x, door_y
-    
-    def update_visualization(self):
-        """Update the visualization with current memory data"""
-        # Check if file has been modified
-        current_mtime = os.path.getmtime(self.memory_file) if os.path.exists(self.memory_file) else 0
-        if current_mtime <= self.last_modified_time:
-            return
-        
-        self.last_modified_time = current_mtime
-        
-        # Load memory data
-        memory_data = self.load_memory()
-        nodes = memory_data.get('nodes', [])
-        edges = memory_data.get('edges', [])
-        
-        # Clear previous visualization
-        self.clear_visualization()
-        
-        # Create room positions dictionary
-        room_positions = {}
-        
-        # Draw rooms (blue circles)
-        for node in nodes:
-            room_name = node.get('name', 'unknown')
-            room_pose = node.get('pose', [0.0, 0.0, 0.0])
-            room_x, room_y = room_pose[0], room_pose[1]
-            
-            room_positions[room_name] = [room_x, room_y]
-            
-            # Create room circle
-            room_circle = patches.Circle((room_x, room_y), self.room_radius, 
-                                       facecolor=self.room_color, alpha=0.7, 
-                                       edgecolor='black', linewidth=2)
-            self.ax.add_patch(room_circle)
-            self.room_patches[room_name] = room_circle
-            
-            # Add room name label
-            room_text = self.ax.text(room_x, room_y, room_name, 
-                                   ha='center', va='center', fontsize=10, 
-                                   fontweight='bold', color='white')
-            self.text_annotations[f"room_{room_name}"] = room_text
-            
-            # Draw features (red circles) connected to room
-            features = node.get('features', [])
-            for i, feature in enumerate(features):
-                if 'object' in feature and 'Coordinate relative to the world frame' in feature:
-                    feature_coords = feature['Coordinate relative to the world frame']
-                    if len(feature_coords) >= 2:
-                        feature_x, feature_y = feature_coords[0], feature_coords[1]
-                        feature_name = feature['object']
-                        
-                        # Create feature circle
-                        feature_circle = patches.Circle((feature_x, feature_y), self.feature_radius,
-                                                      facecolor=self.feature_color, alpha=0.8,
-                                                      edgecolor='black', linewidth=1)
-                        self.ax.add_patch(feature_circle)
-                        self.feature_patches[f"{room_name}_{feature_name}_{i}"] = feature_circle
-                        
-                        # Add feature name label
-                        feature_text = self.ax.text(feature_x, feature_y, feature_name,
-                                                  ha='center', va='center', fontsize=8,
-                                                  color='white', fontweight='bold')
-                        self.text_annotations[f"feature_{room_name}_{feature_name}_{i}"] = feature_text
-                        
-                        # Draw line from room to feature
-                        room_to_feature_line, = self.ax.plot([room_x, feature_x], [room_y, feature_y],
-                                                           color='gray', alpha=0.5, linewidth=1, linestyle='--')
-                        self.edge_lines[f"room_to_feature_{room_name}_{feature_name}_{i}"] = room_to_feature_line
-        
-        # Draw doors (yellow circles) and room connections
-        for edge in edges:
-            from_room = edge.get('from')
-            to_room = edge.get('to')
-            cost = edge.get('cost', 0.0)
-            
-            if from_room in room_positions and to_room in room_positions:
-                room1_pos = room_positions[from_room]
-                room2_pos = room_positions[to_room]
-                
-                # Calculate door position
-                door_x, door_y = self.calculate_door_position(room1_pos, room2_pos)
-                
-                # Create door circle
-                door_circle = patches.Circle((door_x, door_y), self.door_radius,
-                                           facecolor=self.door_color, alpha=0.9,
-                                           edgecolor='black', linewidth=2)
-                self.ax.add_patch(door_circle)
-                self.door_patches[f"door_{from_room}_{to_room}"] = door_circle
-                
-                # Add door label
-                door_text = self.ax.text(door_x, door_y, "DOOR",
-                                       ha='center', va='center', fontsize=8,
-                                       fontweight='bold', color='black')
-                self.text_annotations[f"door_label_{from_room}_{to_room}"] = door_text
-                
-                # Draw connection line between rooms through door
-                room1_x, room1_y = room1_pos[0], room1_pos[1]
-                room2_x, room2_y = room2_pos[0], room2_pos[1]
-                
-                # Line from room1 to door
-                line1, = self.ax.plot([room1_x, door_x], [room1_y, door_y],
-                                    color=self.edge_color, linewidth=2, alpha=0.8)
-                self.edge_lines[f"edge1_{from_room}_{to_room}"] = line1
-                
-                # Line from door to room2
-                line2, = self.ax.plot([door_x, room2_x], [door_y, room2_y],
-                                    color=self.edge_color, linewidth=2, alpha=0.8)
-                self.edge_lines[f"edge2_{from_room}_{to_room}"] = line2
-                
-                # Add cost label at door position
-                cost_text = self.ax.text(door_x, door_y + self.door_radius + 0.1, f"cost: {cost}",
-                                        ha='center', va='bottom', fontsize=7,
-                                        color='black', alpha=0.7)
-                self.text_annotations[f"cost_{from_room}_{to_room}"] = cost_text
-        
-        # Update plot limits to show all elements
-        if room_positions:
-            all_x = [pos[0] for pos in room_positions.values()]
-            all_y = [pos[1] for pos in room_positions.values()]
-            
-            # Add some padding
-            x_min, x_max = min(all_x) - 2, max(all_x) + 2
-            y_min, y_max = min(all_y) - 2, max(all_y) + 2
-            
-            self.ax.set_xlim(x_min, x_max)
-            self.ax.set_ylim(y_min, y_max)
-        
-        # Update display
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
-        
-        print(f"Updated visualization: {len(nodes)} rooms, {len(edges)} connections")
-    
-    def animate(self, frame):
-        """Animation function for real-time updates"""
-        self.update_visualization()
-        return []
-    
-    def start_visualization(self):
-        """Start the real-time visualization"""
-        print(f"Starting topological graph visualization...")
-        print(f"Monitoring file: {self.memory_file}")
-        print(f"Update interval: {self.update_interval} seconds")
-        print("Press Ctrl+C to stop")
-        
-        try:
-            # Create animation
-            self.ani = FuncAnimation(self.fig, self.animate, 
-                                   interval=self.update_interval * 1000,  # Convert to milliseconds
-                                   blit=False, repeat=True)
-            
-            # Show the plot
-            plt.show()
-            
-        except KeyboardInterrupt:
-            print("\nVisualization stopped by user")
-        except Exception as e:
-            print(f"Error in visualization: {e}")
-        finally:
-            plt.close()
-    
-    def save_snapshot(self, filename: str = "topological_graph.png"):
-        """Save current visualization as an image"""
-        self.update_visualization()
-        self.fig.savefig(filename, dpi=300, bbox_inches='tight')
-        print(f"Snapshot saved as {filename}")
+            if cost is not None:
+                best[key] = min(best[key], cost)
+    edges = []
+    for (a, b), c in best.items():
+        edges.append(Edge(a, b, None if c == float("inf") else c))
+    return edges
 
 
-def main():
-    """Main function to run the visualizer"""
-    import argparse
-    
-    parser = argparse.ArgumentParser(description='Topological Graph Visualizer')
-    parser.add_argument('--memory-file', default=None, 
-                       help='Path to memory.yaml file (default: auto-detect from workspace root)')
-    parser.add_argument('--update-interval', type=float, default=1.0,
-                       help='Update interval in seconds (default: 1.0)')
-    parser.add_argument('--save-snapshot', action='store_true',
-                       help='Save a snapshot and exit instead of running real-time')
-    parser.add_argument('--snapshot-filename', default='topological_graph.png',
-                       help='Filename for snapshot (default: topological_graph.png)')
-    
+# ===========================
+# Geometry helpers
+# ===========================
+def interp(a, b, t):
+    return (a[0]*(1-t) + b[0]*t, a[1]*(1-t) + b[1]*t)
+
+
+# ===========================
+# Drawing
+# ===========================
+def draw_graph(
+    rooms: Dict[str, Room],
+    edges: List[Edge],
+    title: str = "Topological Graph",
+    out_png: str = "semantic_graph.png",
+    out_svg: str = "semantic_graph.svg",
+):
+    # Build simple graph for any optional layout ops later
+    G = nx.Graph()
+    for r in rooms.values():
+        G.add_node(r.id)
+    for e in edges:
+        if e.a in rooms and e.b in rooms:
+            G.add_edge(e.a, e.b)
+
+    # Room positions are given by pose x,y
+    pos = {rid: r.xy for rid, r in rooms.items()}
+
+    # Colors for rooms
+    palette = itertools.cycle(PALETTE_ROOMS)
+    room_color = {rid: next(palette) for rid in rooms.keys()}
+
+    fig, ax = plt.subplots(figsize=(16, 12))
+    ax.axis("off")
+
+    # 1) Room–room edges with distance labels + door nodes
+    door_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    door_idx = 0
+    for e in edges:
+        if e.a not in pos or e.b not in pos:
+            continue
+        (x1, y1), (x2, y2) = pos[e.a], pos[e.b]
+
+        # main connection line
+        ax.plot([x1, x2], [y1, y2], color=COLOR_ROOM_EDGE, linewidth=ROOM_EDGE_WIDTH, zorder=1)
+
+        # distance label at midpoint
+        if e.cost is not None:
+            xm, ym = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+            ax.text(
+                xm, ym, f"{e.cost:.1f}m",
+                fontsize=FONT_DISTANCE, ha="center", va="center", color="#1a1a1a",
+                bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#b0bec5", alpha=0.95),
+                zorder=6,
+            )
+
+        # door node on edge
+        t = 0.5
+        xd, yd = interp((x1, y1), (x2, y2), t)
+        ax.scatter([xd], [yd], s=DOOR_NODE_SIZE, color=COLOR_DOOR,
+                   edgecolors=DOOR_NODE_EDGE, linewidths=1.1, zorder=7)
+        letter = door_letters[door_idx % len(door_letters)]
+        door_idx += 1
+        ax.text(xd, yd, letter, fontsize=FONT_OBJECT + 1, ha="center", va="center",
+                color="white", fontweight="bold", zorder=8,
+                bbox=dict(boxstyle="circle,pad=0.15", fc="black", ec="none", alpha=0.7))
+
+    # 2) Rooms
+    for rid, r in rooms.items():
+        x, y = r.xy
+        ax.scatter([x], [y], s=ROOM_NODE_SIZE, color=room_color[rid],
+                   edgecolors=ROOM_NODE_EDGE, linewidths=1.4, zorder=10)
+        ax.text(
+            x, y, "\n".join(textwrap.wrap(r.name, width=10)),
+            fontsize=FONT_ROOM, ha="center", va="center",
+            color="white", fontweight="bold", zorder=11,
+            bbox=dict(boxstyle="round,pad=0.25", fc=(0, 0, 0, 0.15), ec="none"),
+        )
+
+    # 3) Objects
+    # If object has world XY -> draw there. Otherwise arrange radially around room.
+    radial_cache: Dict[str, float] = defaultdict(lambda: 0.0)
+    for rid, r in rooms.items():
+        cx, cy = r.xy
+        n_missing = sum(1 for o in r.objects if o.world_xy is None)
+        # spacing angle for missing objects
+        if n_missing:
+            step = 2 * math.pi / n_missing
+
+        for o in r.objects:
+            if o.world_xy is not None:
+                ox, oy = o.world_xy
+            else:
+                ang = radial_cache[rid]
+                radial_cache[rid] += step
+                radius = 1.2
+                ox = cx + radius * math.cos(ang)
+                oy = cy + radius * math.sin(ang)
+
+            # dashed edge room->object
+            ax.plot([cx, ox], [cy, oy], linestyle=(0, (3, 2)),
+                    color=COLOR_OBJ_EDGE, linewidth=OBJ_EDGE_WIDTH, alpha=0.6, zorder=3)
+
+            # object node + label
+            ax.scatter([ox], [oy], s=OBJECT_NODE_SIZE, color=COLOR_OBJECT,
+                       edgecolors=OBJECT_NODE_EDGE, linewidths=0.8, zorder=8)
+            ax.text(
+                ox, oy, "\n".join(textwrap.wrap(o.name, width=8)),
+                fontsize=FONT_OBJECT, ha="center", va="center", color="white",
+                fontweight="bold", zorder=9,
+                bbox=dict(boxstyle="round,pad=0.22", fc=(0, 0, 0, 0.4), ec="none"),
+            )
+
+    # 4) Title
+    ax.set_title("Topological Graph - Home Environment" if title is None else title,
+                 fontsize=FONT_TITLE, fontweight="bold", pad=12)
+
+    # 5) Legend
+    legend_elems = [
+        Patch(facecolor="#7dc4ff", edgecolor=ROOM_NODE_EDGE, label="Rooms"),
+        Patch(facecolor=COLOR_OBJECT, edgecolor=OBJECT_NODE_EDGE, label="Objects/Features"),
+        Patch(facecolor=COLOR_DOOR, edgecolor=DOOR_NODE_EDGE, label="Doors/Connections"),
+        Line2D([0], [0], color=COLOR_ROOM_EDGE, lw=ROOM_EDGE_WIDTH, label="Room Connections"),
+        Line2D([0], [0], color=COLOR_OBJ_EDGE, lw=OBJ_EDGE_WIDTH, linestyle=(0, (2, 3)),
+               label="Object–Room Relations"),
+    ]
+    leg = ax.legend(handles=legend_elems, loc="lower right", frameon=True,
+                    framealpha=0.9, fontsize=9, borderpad=0.6)
+    leg.get_frame().set_edgecolor("#90a4ae")
+
+    # 6) Environment stats
+    n_rooms = len(rooms)
+    n_objs = sum(len(r.objects) for r in rooms.values())
+    n_conns = len(edges)
+    stats = f"Environment Statistics:\n• {n_rooms} Rooms\n• {n_objs} Objects\n• {n_conns} Connections"
+    ax.text(1.005, 0.03, stats, transform=ax.transAxes, ha="left", va="bottom",
+            fontsize=9.5, bbox=dict(boxstyle="round,pad=0.32", fc="white", ec="#b0bec5", alpha=0.92))
+
+    plt.tight_layout()
+    plt.savefig(out_png, dpi=DPI, bbox_inches="tight")
+    plt.savefig(out_svg, dpi=DPI, bbox_inches="tight")
+    print(f"Saved: {out_png}  |  {out_svg}")
+
+
+# ===========================
+# CLI
+# ===========================
+if __name__ == "__main__":
+    import argparse, os
+    parser = argparse.ArgumentParser(description="Render a semantic/topological graph from memory.yaml")
+    parser.add_argument("yaml_path", help="Path to YAML with keys: nodes[], edges[]")
+    parser.add_argument("--title", default="Topological Graph - Home Environment")
+    parser.add_argument("--out", default=None, help="Output basename (no extension)")
     args = parser.parse_args()
-    
-    # Create visualizer
-    visualizer = TopologicalVisualizer(
-        memory_file=args.memory_file,
-        update_interval=args.update_interval
-    )
-    
-    if args.save_snapshot:
-        # Save snapshot and exit
-        visualizer.save_snapshot(args.snapshot_filename)
-    else:
-        # Start real-time visualization
-        visualizer.start_visualization()
 
-
-if __name__ == '__main__':
-    main() 
+    raw = load_yaml(args.yaml_path)
+    rooms = parse_rooms(raw)
+    edges = parse_edges(raw)
+    base = args.out or (os.path.splitext(os.path.basename(args.yaml_path))[0] + "_graph")
+    draw_graph(rooms, edges, title=args.title, out_png=base + ".png", out_svg=base + ".svg")

@@ -7,20 +7,6 @@
 # 1. Understand task requirements and extract key features
 # 2. Extract targets for VLM, obtain distance from depth map, solve world coordinate offset
 # 3. Publish coordinates_diff for navigation
-#
-# IMPORTANT CONFIGURATIONS FOR SIMULATION vs REAL HARDWARE:
-# 
-# 1. Camera Topics (in _setup_subscriptions_and_publishers()):
-#    - For SIMULATION: Use /camera/camera/image_raw (raw Image topics)
-#    - For REAL HARDWARE: Use /camera/camera/color/image_raw/compressed (CompressedImage topics)
-#
-# 2. Camera Parameters & Depth Units (in __init__()):
-#    - For SIMULATION: MemoryBuilder(use_simulation=True)
-#      * Camera intrinsics: cx=320, cy=240, fx=fy=521.74 (from Gazebo FOV)
-#      * Depth values: Already in METERS (no conversion needed)
-#    - For REAL HARDWARE: MemoryBuilder(use_simulation=False)  
-#      * Camera intrinsics: cx=211.73, cy=123.504, fx=307.767, fy=307.816 (RealSense)
-#      * Depth values: In MILLIMETERS (converted to meters by /1000)
 ############################
 """
 
@@ -60,18 +46,7 @@ class ServiceNode(Node):
         # Initialize core components
         self.bridge = CvBridge()
         self.VL = GroundingDINOInfer()
-        
-        # ============================================================================
-        # CAMERA PARAMETER CONFIGURATION
-        # Set use_simulation=True for Gazebo simulation, False for real RealSense camera
-        # ============================================================================
-        self.memory_builder = MemoryBuilder(use_simulation=True)  # Change to False for real hardware
-        
-        # ============================================================================
-        # DEBUG VISUALIZATION CONTROL
-        # Set to True to enable VLM detection debug window (can cause lag in simulation)
-        # ============================================================================
-        self.enable_debug_visualization = True  # Uncomment to enable debug window
+        self.memory_builder = MemoryBuilder()
         
         # Image data
         self.rgb_image = None
@@ -92,7 +67,6 @@ class ServiceNode(Node):
         # Control flags
         self.update_flag = 1
         self.suppress_background_activity = False
-        self.enable_debug_visualization = False  # Set to True to enable VLM debug window
         
         # Camera2map monitoring
         self.last_camera2map_time = 0
@@ -109,46 +83,34 @@ class ServiceNode(Node):
         self._setup_subscriptions_and_publishers()
         self._setup_timers()
         
-        # ============================================================================
-        # ENVIRONMENT CONTEXT PUBLISHER
-        # Publish environment context to YOLO node for map building
-        # ============================================================================
-        self.context_pub = self.create_publisher(String, '/environment_context', 10)
-        
         self.get_logger().info("ServiceNode started - waiting for images and camera2map messages...")
 
     def _setup_subscriptions_and_publishers(self):
         """Initialize ROS2 subscriptions and publishers"""
-        # ==========================================================================
-        # CAMERA TOPIC CONFIGURATION - CHOOSE ONE BASED ON YOUR SETUP
-        # ==========================================================================
-        
-        # ---------------------- FOR REAL HARDWARE USE THESE TOPICS ----------------------
-        # Uncomment these lines when using real RealSense camera hardware:
+        # Subscriptions
         # self.create_subscription(
         #     CompressedImage, 
-        #     '/camera/camera/color/image_raw/compressed',  # Real hardware RGB topic
+        #     '/camera/camera/color/image_raw/compressed', 
         #     self.rgb_callback, 10
         # )
         # self.create_subscription(
         #     Image, 
-        #     '/camera/camera/depth/image_rect_raw',        # Real hardware depth topic
+        #     '/camera/camera/depth/image_rect_raw', 
         #     self.depth_callback, 10
         # )
 
-        # ---------------------- FOR SIMULATION USE THESE TOPICS ----------------------
-        # These are active for Gazebo simulation - comment out when using real hardware:
+        #For Simulation only --------------------------------
         self.create_subscription(
             Image, 
-            '/camera/camera/image_raw',                    # Simulation RGB topic
+            '/camera/camera/color/image_raw', 
             self.rgb_callback, 10
         )
         self.create_subscription(
             Image, 
-            '/camera/camera/depth/image_raw',              # Simulation depth topic
+            '/camera/camera/depth/image_raw', 
             self.depth_callback, 10
         )
-        # ==========================================================================
+          #For Simulation only --------------------------------
           
         self.create_subscription(
             Camera2map, 
@@ -166,11 +128,7 @@ class ServiceNode(Node):
 
     def _setup_timers(self):
         """Initialize ROS2 timers"""
-        # ============================================================================ 
-        # REMOVED VLM-BASED MAP BUILDING - NOW HANDLED BY YOLO NODE
-        # ============================================================================
-        # self.update_memory_map = self.create_timer(1.0, self.update_map)  # REMOVED
-        
+        self.update_memory_map = self.create_timer(1.0, self.update_map)
         self.camera2map_monitor_timer = self.create_timer(2.0, self.monitor_camera2map_topic)
 
     def suppress_background_logging(self, suppress=True):
@@ -188,12 +146,7 @@ class ServiceNode(Node):
     def rgb_callback(self, msg):
         """Handle RGB image messages"""
         try:
-            # For simulation: use imgmsg_to_cv2 (raw Image messages)
-            # For real hardware: use compressed_imgmsg_to_cv2 (CompressedImage messages)
-            if hasattr(msg, 'format'):  # CompressedImage has 'format' attribute
-                self.rgb_image = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            else:  # Raw Image message
-                self.rgb_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            self.rgb_image = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding='bgr8')
             self.update_flag = 1
         except Exception as e:
             self.get_logger().error(f"Error processing RGB image: {e}")
@@ -236,30 +189,72 @@ class ServiceNode(Node):
     # TIMER FUNCTIONS
     # ============================================================================
 
-    # ============================================================================
-    # VLM-BASED MAP BUILDING REMOVED - NOW HANDLED BY YOLO NODE  
-    # ============================================================================
-    # def update_map(self):  # REMOVED - YOLO handles semantic mapping now
-    #     """Update semantic map with detected features"""
-    #     # This functionality has been moved to YOLOv11 Object365 node
-    #     pass
-    
-    def publish_environment_context(self, context):
-        """Publish environment context to YOLO node for map building"""
+    def update_map(self):
+        """Update semantic map with detected features"""
+        if self.suppress_background_activity or not self.update_flag or self.rgb_image is None:
+            return
+            
+        self.update_flag = 0
+        pil_image = PILImage.fromarray(cv2.cvtColor(self.rgb_image, cv2.COLOR_BGR2RGB))
+        
         try:
-            msg = String()
-            msg.data = context
-            self.context_pub.publish(msg)
-            self.get_logger().info(f"📡 Published environment context: {context}")
+            if self.environment_context:
+                self.get_logger().info(f"🗺️ Using environment context: {self.environment_context}")
+            
+            map_analysis = lm.gpt_map_build(pil_image, self.environment_context)
+            map_analysis = ans2json.ans2json(map_analysis)
+            self.get_logger().info(f"Map Analysis: {map_analysis}")
+            
         except Exception as e:
-            self.get_logger().error(f"Failed to publish environment context: {e}")
+            self.get_logger().error(f"OpenAI API error in map building: {e}")
+            self.get_logger().warn("Skipping map update due to API timeout/error")
+            return
+        
+        features_with_coords = self._process_map_features(map_analysis)
+        self._save_room_classification(map_analysis, features_with_coords)
+        
+        self.get_logger().info("Updated features in map!")
 
-    # ============================================================================
-    # VLM-BASED MAP PROCESSING METHODS REMOVED - NOW HANDLED BY YOLO NODE
-    # ============================================================================
-    # def _process_map_features(self, map_analysis):  # REMOVED
-    # def _save_room_classification(self, map_analysis, features_with_coords):  # REMOVED
-    # These methods have been moved to YOLOv11 Object365 node for efficiency
+    def _process_map_features(self, map_analysis):
+        """Process detected features and calculate coordinates"""
+        features_with_coords = []
+        
+        if map_analysis and "features" in map_analysis:
+            for feature in map_analysis["features"]:
+                if "object" in feature:
+                    obj_name = feature["object"]
+                    img_detect, rect, center = self.VL.infer(self.rgb_image, obj_name + ".")
+                    
+                    if rect is not None and center is not None:
+                        dis, wx, wy = self.memory_builder.pix2camera_frame(
+                            center, self.depth_image, self.get_logger()
+                        )
+                        
+                        if dis is not None and dis > 0:
+                            features_with_coords.append({
+                                "object": obj_name,
+                                "Coordinate relative to the camera frame": [wx, wy]
+                            })
+        
+        return features_with_coords
+
+    def _save_room_classification(self, map_analysis, features_with_coords):
+        """Save room classification and features to memory"""
+        if not features_with_coords or "room_type" not in map_analysis:
+            return
+            
+        proposed_room_type = map_analysis["room_type"]
+        room_pose = self.memory_builder.camera_pose if self.memory_builder.camera_pose else [0.0, 0.0, 0.0]
+        
+        if self.memory_builder.can_classify_new_room(proposed_room_type, self.get_logger()):
+            self.memory_builder.save_to_memory(proposed_room_type, features_with_coords, room_pose)
+            self.get_logger().info(f"✅ Room '{proposed_room_type}' classified and saved to memory at pose {room_pose}")
+        else:
+            if self.memory_builder.last_room_type:
+                self.memory_builder.save_to_memory(self.memory_builder.last_room_type, features_with_coords, room_pose)
+                self.get_logger().info(f"📝 Features saved to existing room '{self.memory_builder.last_room_type}' (no new room classification)")
+            else:
+                self.get_logger().warn("⚠️ No room type available for feature storage")
 
 
 
@@ -287,21 +282,15 @@ class ServiceNode(Node):
         img_detect, rect, center = self.VL.infer(self.rgb_image, obj + ".")
         self.rect = rect
         
-        if img_detect is not None and self.enable_debug_visualization:
+        if img_detect is not None:
             cv2.imshow("VLM Detection", img_detect)
-            cv2.waitKey(0.1)
+            cv2.waitKey(1)
 
         if rect is None:
             print("no object found")
             return False
         
-        result = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
-        
-        # Handle different return formats: simulation (4 values) vs hardware (3 values)
-        if len(result) == 4:  # Simulation: (dis, wx, wy, wz)
-            dis, wx, wy, wz = result
-        else:  # Real hardware: (dis, wx, wy)
-            dis, wx, wy = result
+        dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
         if dis is None or dis == 0:
             return False
         
@@ -388,11 +377,6 @@ def main(args=None):
             context = input("\n📝 Please provide context about the environment (e.g., Warehouse, Supermarket, etc):\n> ").strip()
             node.environment_context = context
             
-            # ============================================================================
-            # PUBLISH ENVIRONMENT CONTEXT TO YOLO NODE FOR SEMANTIC MAP BUILDING
-            # ============================================================================
-            node.publish_environment_context(context)
-            
             question = input("\nEnter your question (type Ctrl+C to exit):\n> ").strip()
             if not question:
                 print("Invalid question")
@@ -449,9 +433,7 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
-        # Ensure all OpenCV windows are properly closed
         cv2.destroyAllWindows()
-        cv2.waitKey(1)  # Allow time for window cleanup
 
 
 if __name__ == '__main__':

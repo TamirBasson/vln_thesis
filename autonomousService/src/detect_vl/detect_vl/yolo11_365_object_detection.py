@@ -26,6 +26,11 @@ from cv_bridge import CvBridge
 # Import MemoryBuilder for semantic map construction
 from scripts.memory_builder import MemoryBuilder
 
+# Import LLM modules for room classification
+import scripts.service_lm as lm
+import scripts.ans2json as ans2json
+from PIL import Image as PILImage
+
 class YOLOv11Object365Detector(Node):
     """
     ROS2 Node for YOLOv11 Object365 object detection.
@@ -43,7 +48,7 @@ class YOLOv11Object365Detector(Node):
         # ============================================================================
         # Initialize MemoryBuilder for semantic map construction
         self.memory_builder = MemoryBuilder(use_simulation=True)  # Change to False for real hardware
-        self.environment_context = ""  # Will be set by navigation node
+        self.environment_context = "house"  # Will be set by navigation node
         
         # Initialize model
         self.model = None
@@ -584,7 +589,7 @@ class YOLOv11Object365Detector(Node):
             results = self.model.predict(
                 source=rgb_copy,
                 imgsz=640,
-                conf=0.5,  # Slightly lower confidence for map building
+                conf=0.6,  # Slightly lower confidence for map building
                 iou=self.nms_threshold,
                 max_det=self.max_detections,
                 verbose=False,
@@ -594,69 +599,29 @@ class YOLOv11Object365Detector(Node):
             # Process detections for map building
             detections = self.process_yolo_results(results[0], rgb_copy)
             
-            # Filter for static landmark objects
-            landmark_detections = self.filter_landmark_objects(detections)
-            
-            # Build semantic map features with coordinates
-            if landmark_detections:
-                features_with_coords = self.process_landmark_coordinates(landmark_detections, depth_copy)
+            # Build semantic map features with coordinates for all detections
+            if detections:
+                features_with_coords = self.process_object_coordinates(detections, depth_copy)
                 
                 if features_with_coords:
                     # Classify room type based on detected objects
-                    room_type = self.classify_room_type(landmark_detections)
+                    room_type = self.classify_room_type(detections)
                     
-                    # Save to memory system
-                    self.save_semantic_features(room_type, features_with_coords)
+                    # Save to memory system only if classification was successful
+                    if room_type is not None:
+                        self.save_semantic_features(room_type, features_with_coords)
+                    else:
+                        self.get_logger().info("⏭️ Skipping semantic map update for current image due to classification failure")
                     
         except Exception as e:
             self.get_logger().error(f"Semantic map update failed: {e}")
     
-    def filter_landmark_objects(self, detections):
-        """Filter detections to keep only static landmark objects suitable for navigation"""
-        # Define static landmark object classes (Object365 class names)
-        landmark_classes = {
-            # Furniture
-            'chair', 'table', 'sofa', 'bed', 'desk', 'cabinet', 'shelf', 'bookshelf',
-            'dresser', 'wardrobe', 'nightstand', 'bench', 'stool',
-            
-            # Appliances & Electronics
-            'refrigerator', 'oven', 'microwave', 'dishwasher', 'washing_machine',
-            'television', 'computer', 'printer', 'air_conditioner',
-            
-            # Architectural elements
-            'door', 'window', 'stairs', 'elevator', 'pillar', 'wall', 'fireplace',
-            
-            # Storage & Equipment
-            'trash_can', 'vase', 'plant', 'picture_frame', 'mirror', 'clock',
-            'whiteboard', 'blackboard', 'projector_screen',
-            
-            # Kitchen items
-            'kitchen_island', 'kitchen_cabinet', 'kitchen_counter', 'sink',
-            
-            # Bathroom fixtures
-            'toilet', 'bathtub', 'shower', 'bathroom_sink'
-        }
-        
-        landmark_detections = []
-        for detection in detections:
-            class_name = detection['class_name'].lower()
-            
-            # Check if it's a landmark class and has good confidence
-            if (class_name in landmark_classes and 
-                detection['confidence'] > 0.6 and  # Higher confidence for landmarks
-                detection['depth'] is not None and
-                detection['depth'] > 0.5 and  # Must be reasonably far to be a landmark
-                detection['area'] > 2000):  # Must have reasonable size
-                
-                landmark_detections.append(detection)
-        
-        return landmark_detections
     
-    def process_landmark_coordinates(self, landmark_detections, depth_image):
-        """Convert landmark detections to world coordinates"""
+    def process_object_coordinates(self, detections, depth_image):
+        """Convert object detections to world coordinates"""
         features_with_coords = []
         
-        for detection in landmark_detections:
+        for detection in detections:
             center_x, center_y = detection['center']
             class_name = detection['class_name']
             
@@ -686,42 +651,40 @@ class YOLOv11Object365Detector(Node):
                 })
                 
                 self.get_logger().info(
-                    f"🏗️ LANDMARK: {class_name} detected at {coord_str}, "
+                    f"🏗️ OBJECT: {class_name} detected at {coord_str}, "
                     f"depth: {dis:.2f}m, confidence: {detection['confidence']:.2f}"
                 )
         
         return features_with_coords
     
     def classify_room_type(self, detections):
-        """Classify room type based on detected landmark objects"""
-        class_counts = {}
-        for detection in detections:
-            class_name = detection['class_name'].lower()
-            class_counts[class_name] = class_counts.get(class_name, 0) + 1
-        
-        # Room type classification rules
-        if any(cls in class_counts for cls in ['bed', 'dresser', 'nightstand', 'wardrobe']):
-            return 'bedroom'
-        elif any(cls in class_counts for cls in ['sofa', 'television', 'coffee_table']):
-            return 'living_room'
-        elif any(cls in class_counts for cls in ['refrigerator', 'oven', 'microwave', 'kitchen_cabinet']):
-            return 'kitchen'
-        elif any(cls in class_counts for cls in ['toilet', 'bathtub', 'shower', 'bathroom_sink']):
-            return 'bathroom'
-        elif any(cls in class_counts for cls in ['desk', 'computer', 'chair', 'bookshelf']):
-            return 'office'
-        elif any(cls in class_counts for cls in ['table', 'chair']) and len(class_counts) >= 2:
-            return 'dining_room'
-        else:
-            # Default based on environment context
-            if self.environment_context.lower() in ['warehouse', 'factory']:
-                return 'warehouse'
-            elif self.environment_context.lower() in ['hospital', 'clinic']:
-                return 'corridor'
-            elif self.environment_context.lower() in ['office', 'workplace']:
-                return 'office'
+        """Classify room type using LLM (GPT) based on image and detected objects"""
+        try:
+            # Convert RGB image to PIL format for LLM processing
+            with self.rgb_lock:
+                rgb_copy = self.rgb_image.copy()
+            
+            pil_image = PILImage.fromarray(cv2.cvtColor(rgb_copy, cv2.COLOR_BGR2RGB))
+            
+            # Use GPT for map building and room classification
+            if self.environment_context:
+                self.get_logger().info(f"🗺️ Using environment context for room classification: {self.environment_context}")
+            
+            map_analysis = lm.gpt_map_build(pil_image, self.environment_context)
+            map_analysis = ans2json.ans2json(map_analysis)
+            
+            # Extract room type from GPT response
+            if map_analysis and "room_type" in map_analysis:
+                room_type = map_analysis["room_type"]
+                self.get_logger().info(f"🏠 GPT classified room as: {room_type}")
+                return room_type
             else:
-                return 'room'
+                self.get_logger().warn("⚠️ GPT response missing room_type - skipping classification for current image")
+                return None  # Skip classification
+                
+        except Exception as e:
+            self.get_logger().error(f"❌ GPT room classification failed: {e} - skipping classification for current image")
+            return None  # Skip classification
     
     def save_semantic_features(self, room_type, features_with_coords):
         """Save detected semantic features to memory system"""
@@ -739,7 +702,7 @@ class YOLOv11Object365Detector(Node):
                 self.memory_builder.save_to_memory(room_type, features_with_coords, room_pose)
                 self.get_logger().info(
                     f"🗺️ YOLO MAP: Room '{room_type}' classified and saved with "
-                    f"{len(features_with_coords)} landmarks at pose {room_pose}"
+                    f"{len(features_with_coords)} objects at pose {room_pose}"
                 )
             else:
                 # Add features to existing room
@@ -750,7 +713,7 @@ class YOLOv11Object365Detector(Node):
                         room_pose
                     )
                     self.get_logger().info(
-                        f"🗺️ YOLO MAP: Added {len(features_with_coords)} landmarks to "
+                        f"🗺️ YOLO MAP: Added {len(features_with_coords)} objects to "
                         f"existing room '{self.memory_builder.last_room_type}'"
                     )
                     

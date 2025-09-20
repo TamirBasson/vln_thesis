@@ -17,13 +17,8 @@ class MemoryBuilder:
         self._load_memory()
         self.camera_pose = None  # [x, y, yaw]
         
-        # Door detection and room transition tracking
-        self.door_detected = False
-        self.last_door_detection_time = 0
-        self.door_detection_threshold = 2.0  # seconds to consider door detection valid
-        self.room_transition_detected = False
+        # Room tracking
         self.last_room_type = None
-        self.door_detection_distance_threshold = 1.0  # meters - distance to consider door "passed through"
 
         if not os.path.exists(self.memory_file):
             # create a new file
@@ -83,22 +78,116 @@ class MemoryBuilder:
         return filtered_features
 
     def _update_edges(self):
-        """Update all edges based on current room poses"""
+        """Update edges between directly accessible rooms"""
         self.memory_data["edges"] = []
         nodes = self.memory_data["nodes"]
         
-        # Create edges between all rooms
+        if len(nodes) < 2:
+            # Need at least 2 rooms to create edges
+            return
+        
+        # Create edges between rooms based on proximity and accessibility
         for i, node1 in enumerate(nodes):
             for node2 in nodes[i+1:]:
                 distance = self._calculate_distance(node1["pose"], node2["pose"])
-                # Only create edge if rooms are within reasonable distance (e.g., 5 meters)
-                if distance < 1.0:
-                    edge = {
+                
+                # Debug: print distance between rooms
+                print(f"🔍 Distance between {node1['name']} and {node2['name']}: {distance:.2f}m")
+                
+                # Create edge if rooms are within reasonable indoor distance
+                # and check if they should be directly connected
+                if distance < 10.0:
+                    directly_connected = self._are_rooms_directly_connected(node1, node2, distance)
+                    print(f"  → Directly connected: {directly_connected}")
+                    
+                    if directly_connected:
+                        # Create bidirectional edges
+                        edge1 = {
                         "from": node1["name"],
                         "to": node2["name"],
                         "cost": round(distance, 2)
                     }
-                    self.memory_data["edges"].append(edge)
+                        edge2 = {
+                            "from": node2["name"],
+                            "to": node1["name"],
+                            "cost": round(distance, 2)
+                        }
+                        self.memory_data["edges"].append(edge1)
+                        self.memory_data["edges"].append(edge2)
+                        
+                        # Debug: print when edge is created
+                        print(f"✅ Created edge: {node1['name']} ↔ {node2['name']} (distance: {distance:.2f}m)")
+                else:
+                    print(f"  → Too far for direct connection (>{10.0}m)")
+        
+        # Print total edges created
+        print(f"📊 Total edges created: {len(self.memory_data['edges'])}")
+    
+    def _are_rooms_directly_connected(self, room1, room2, distance):
+        """Check if two rooms are directly accessible without going through other rooms"""
+        # Simple heuristic: rooms are directly connected if:
+        # 1. They are close enough (already checked)
+        # 2. No other room is positioned between them
+        
+        nodes = self.memory_data["nodes"]
+        room1_pose = room1["pose"]
+        room2_pose = room2["pose"]
+        
+        print(f"    🔍 Checking direct connection between {room1['name']} and {room2['name']}")
+        
+        # Check if any other room is positioned between these two rooms
+        for node in nodes:
+            if node["name"] == room1["name"] or node["name"] == room2["name"]:
+                continue
+                
+            node_pose = node["pose"]
+            
+            # Calculate if this room is roughly between room1 and room2
+            dist_to_room1 = self._calculate_distance(node_pose, room1_pose)
+            dist_to_room2 = self._calculate_distance(node_pose, room2_pose)
+            
+            print(f"      • Checking {node['name']}: dist to {room1['name']}={dist_to_room1:.2f}m, dist to {room2['name']}={dist_to_room2:.2f}m")
+            
+            # If this room is very close to the line between room1 and room2
+            # and the total distance through this room is not much longer,
+            # then room1 and room2 might not be directly connected
+            if (dist_to_room1 < distance * 0.8 and dist_to_room2 < distance * 0.8 and
+                dist_to_room1 + dist_to_room2 < distance * 1.5):
+                # There's likely a room between them
+                print(f"      ❌ {node['name']} is blocking the direct path!")
+                return False
+        
+        # Default: assume rooms are directly connected if no blocking room found
+        print(f"    ✅ No blocking rooms found - direct connection possible")
+        return True
+    
+    def force_edge_update(self, logger=None):
+        """Force an immediate update of all edges and save to file"""
+        if logger:
+            logger.info("🔄 Forcing edge update...")
+        else:
+            print("🔄 Forcing edge update...")
+            
+        self._update_edges()
+        
+        # Save updated edges to file
+        try:
+            with open(self.memory_file, 'w') as f:
+                safe_data = convert_numpy(self.memory_data)
+                yaml.dump(safe_data, f, default_flow_style=False, sort_keys=False)
+            
+            message = f"✅ Edge update complete! Created {len(self.memory_data['edges'])} edges between {len(self.memory_data['nodes'])} rooms"
+            if logger:
+                logger.info(message)
+            else:
+                print(message)
+                
+        except Exception as e:
+            error_msg = f"Error saving edges to memory file: {e}"
+            if logger:
+                logger.error(error_msg)
+            else:
+                print(error_msg)
 
     def update_camera_pose(self, wx: float, wy: float, yaw: float, logger=None):
         """Update the camera pose in the map frame"""
@@ -199,7 +288,7 @@ class MemoryBuilder:
     # ===== MOVED FUNCTIONS FROM start_service.py =====
 
     def can_classify_new_room(self, proposed_room_type: str, logger=None) -> bool:
-        """Check if we can classify a new room type based on door transition"""
+        """Check if we can classify a new room type"""
         # If this is the first room classification, allow it
         if self.last_room_type is None:
             self.last_room_type = proposed_room_type
@@ -209,28 +298,44 @@ class MemoryBuilder:
         if proposed_room_type == self.last_room_type:
             return True
             
-        # If we haven't detected a room transition, don't allow new room classification
-        if not self.room_transition_detected:
-            if logger:
-                logger.warn(f"🚫 Cannot classify new room '{proposed_room_type}' - no door transition detected")
-            return False
-            
-        # Room transition detected, allow new classification and reset
+        # Allow new room classification without door transition dependency
         if logger:
-            logger.info(f"✅ Room transition confirmed - classifying new room: {proposed_room_type}")
+            logger.info(f"✅ Classifying new room: {proposed_room_type}")
         self.last_room_type = proposed_room_type
-        self.room_transition_detected = False  # Reset for next transition
         return True
 
 
     def get_room_transition_status(self) -> Dict[str, Any]:
-        """Get current room transition status for debugging"""
+        """Get current room status for debugging"""
         return {
-            "current_room": self.last_room_type,
-            "door_detected": self.door_detected,
-            "room_transition_detected": self.room_transition_detected,
-            "time_since_door_detection": time.time() - self.last_door_detection_time if self.door_detected else None
+            "current_room": self.last_room_type
         }
+    
+    def print_memory_status(self, logger=None):
+        """Print current memory status for debugging"""
+        nodes = self.memory_data["nodes"]
+        edges = self.memory_data["edges"]
+        
+        message = f"""
+🗺️ MEMORY MAP STATUS:
+📍 Rooms ({len(nodes)} total):"""
+        
+        for node in nodes:
+            pose = node.get("pose", [0, 0, 0])
+            features_count = len(node.get("features", []))
+            message += f"\n  • {node['name']}: pose=({pose[0]:.2f}, {pose[1]:.2f}, {pose[2]:.2f}), features={features_count}"
+        
+        message += f"\n🔗 Edges ({len(edges)} total):"
+        if edges:
+            for edge in edges:
+                message += f"\n  • {edge['from']} → {edge['to']} (cost: {edge['cost']}m)"
+        else:
+            message += "\n  • No edges found!"
+        
+        if logger:
+            logger.info(message)
+        else:
+            print(message)
 
     # def detect_doors(self, rgb_image, depth_image, vlm_model, logger=None):
     #     """Detect doors in the current image and track door transitions"""
