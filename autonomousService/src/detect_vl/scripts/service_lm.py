@@ -19,8 +19,8 @@ Your job is to:
   : "turn right" means -90
 Assign one of the following **spatial relations**:
 
-- `"near"` : default; stop close to the object
-- `"at"` : go directly to the object
+- `"near"` : default; stop close to the object, go to the object
+- `"at"` : go directly at the object
 - `"through"` : pass through the object (e.g., a door or hallway)
 - `"past"` : move past or alongside the object without stopping
 - `"toward"` : move in the general direction of the object

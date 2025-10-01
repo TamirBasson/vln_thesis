@@ -1,8 +1,8 @@
 edges:
-- cost: 3.97
+- cost: 8.24
   from: bedroom
   to: living room
-- cost: 3.97
+- cost: 8.24
   from: living room
   to: bedroom
 - cost: 3.5
@@ -17,18 +17,6 @@ edges:
 - cost: 3.43
   from: kitchen
   to: bedroom
-- cost: 2.0
-  from: living room
-  to: dining room
-- cost: 2.0
-  from: dining room
-  to: living room
-- cost: 2.08
-  from: living room
-  to: kitchen
-- cost: 2.08
-  from: kitchen
-  to: living room
 - cost: 0.11
   from: dining room
   to: kitchen
@@ -93,11 +81,39 @@ nodes:
     confidence: 0.6971732974052429
     depth: 1.997
     object: laptop
+  - Coordinate relative to the camera frame:
+    - 1.9923650026321411
+    - 0.0038186932238895637
+    Coordinate relative to the world frame:
+    - 2.584285971050935
+    - -0.12147802213748951
+    object: rug
+  - Coordinate relative to the camera frame:
+    - 1.901957392692566
+    - -0.5431664267857407
+    Coordinate relative to the world frame:
+    - 5.777514861280337
+    - -0.5054927748467877
+    object: sofa
+  - Coordinate relative to the camera frame:
+    - 1.9016085863113403
+    - -0.5467115573785813
+    Coordinate relative to the world frame:
+    - 5.777735548640198
+    - -0.5090481811387713
+    object: shelf
+  - Coordinate relative to the camera frame:
+    - 0.1962430328130722
+    - 0.00037613185267196725
+    Coordinate relative to the world frame:
+    - 4.006973403475369
+    - -0.2407609544243752
+    object: table
   name: living room
   pose:
-  - -5.189545154571533
-  - -3.6809000968933105
-  - -2.9750704765319824
+  - 3.8132989406585693
+  - -0.27241015434265137
+  - 0.16006600856781006
 - features:
   - Coordinate relative to the camera frame:
     - 3.481
