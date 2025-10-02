@@ -53,4 +53,37 @@
     </inertial>
   </xacro:macro>
 
+
+    <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="front_hinge">
+    <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="front_wheel_link">
+    <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="left_wheel_link">
+    <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="rear_hinge">
+    <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="rear_wheel_link">
+    <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="right_wheel_link">
+    <material>Gazebo/Black</material>
+    </gazebo>
+
+
+    <gazebo reference="lidar_link">
+    <material>Gazebo/Blue</material>
+    </gazebo>
 </robot>

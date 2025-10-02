@@ -33,13 +33,13 @@ def generate_launch_description():
 
     declare_use_warehouse = DeclareLaunchArgument(
         name="use_warehouse",
-        default_value="false",
+        default_value="true",
         description="Use warehouse world (true) or small house world (false)"
     )
 
     declare_use_small_house = DeclareLaunchArgument(
         name="use_small_house",
-        default_value="true",
+        default_value="false",
         description="Use small house world (true) or other worlds (false)"
     )
 
@@ -91,23 +91,18 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration("use_small_house"))
     )
 
-    # Gazebo Launch - Hospital World (Optimized)
+    # Gazebo Launch - Hospital World
     gazebo_hospital_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
-                FindPackageShare("aws_robomaker_hospital_world"), "launch", "hospital.launch.py"
+                FindPackageShare("aws_robomaker_hospital_world"), "launch", "hospital_optimized.launch.py"
             ])
         ]),
         launch_arguments={
             "world": PathJoinSubstitution([
-                FindPackageShare("aws_robomaker_hospital_world"), "worlds", "hospital_two_floors.world"
+                FindPackageShare("aws_robomaker_hospital_world"), "worlds", "hospital.world"
             ]),
-            "gui": "true",
-            "verbose": "true",
-            "physics": "ode",
-            "paused": "false",
-            "use_sim_time": "true",
-            "extra_gazebo_args": "--verbose"
+            "gui": "true"
         }.items(),
         condition=IfCondition(LaunchConfiguration("use_hospital"))
     )
@@ -128,7 +123,7 @@ def generate_launch_description():
                 package="gazebo_ros",
                 executable="spawn_entity.py",
                 output="screen",
-                arguments=["-topic", "robot_description", "-entity", "autonomous_robot"]
+                arguments=["-topic", "robot_description", "-entity", "autonomous_robot", "-z", "0.5"]
             )
         ]
     )

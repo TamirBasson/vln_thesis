@@ -576,6 +576,7 @@
     <fdir1>1 0 0</fdir1>
     <minDepth>0.001</minDepth>
     <maxVel>1.0</maxVel>
+    <material>Gazebo/Black</material>
   </gazebo>
 
   <gazebo reference="right_wheel_link">
@@ -586,6 +587,7 @@
     <fdir1>1 0 0</fdir1>
     <minDepth>0.001</minDepth>
     <maxVel>1.0</maxVel>
+    <material>Gazebo/Black</material>
   </gazebo>
 
   <gazebo reference="front_wheel_link">
@@ -596,6 +598,7 @@
     <fdir1>1 0 0</fdir1>
     <minDepth>0.001</minDepth>
     <maxVel>1.0</maxVel>
+    <material>Gazebo/Black</material>
   </gazebo>
 
   <gazebo reference="rear_wheel_link">
@@ -606,6 +609,11 @@
     <fdir1>1 0 0</fdir1>
     <minDepth>0.001</minDepth>
     <maxVel>1.0</maxVel>
+    <material>Gazebo/Black</material>
   </gazebo>
+
+
+ 
+
 
 </robot> 
