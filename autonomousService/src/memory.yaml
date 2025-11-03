@@ -1,50 +1,106 @@
 edges:
-- cost: 6.2
-  from: living room
-  to: entrance hall
-- cost: 6.2
-  from: entrance hall
-  to: living room
-- cost: 1.6
-  from: entrance hall
-  to: dining room
-- cost: 1.6
-  from: dining room
-  to: entrance hall
-- cost: 2.3
-  from: entrance hall
-  to: kitchen
-- cost: 2.3
-  from: kitchen
-  to: entrance hall
 - cost: 0.77
   from: dining room
   to: kitchen
 - cost: 0.77
   from: kitchen
   to: dining room
-- cost: 5.24
-  from: living room
+- cost: 5.94
+  from: dining room
   to: bedroom1
-- cost: 5.24
+- cost: 5.94
   from: bedroom1
+  to: dining room
+- cost: 1.59
+  from: dining room
+  to: entrance hall
+- cost: 1.59
+  from: entrance hall
+  to: dining room
+- cost: 5.98
+  from: kitchen
+  to: bedroom1
+- cost: 5.98
+  from: bedroom1
+  to: kitchen
+- cost: 4.42
+  from: living room
+  to: entrance hall
+- cost: 4.42
+  from: entrance hall
   to: living room
-- cost: 2.4
+- cost: 2.79
   from: living room
   to: home gym
-- cost: 2.4
+- cost: 2.79
   from: home gym
   to: living room
-- cost: 2.4
-  from: home gym
-  to: bedroom2
-- cost: 3.15
+- cost: 2.84
   from: living room
-  to: bedroom2
-- cost: 3.15
-  from: bedroom2
+  to: home gym
+- cost: 2.84
+  from: home gym
   to: living room
-
+- cost: 5.18
+  from: bedroom1
+  to: entrance hall
+- cost: 5.18
+  from: entrance hall
+  to: bedroom1
+- cost: 7.49
+  from: bedroom1
+  to: home gym
+- cost: 7.49
+  from: home gym
+  to: bedroom1
+- cost: 7.46
+  from: bedroom1
+  to: home gym
+- cost: 7.46
+  from: home gym
+  to: bedroom1
+- cost: 7.1
+  from: bedroom1
+  to: bedroom2
+- cost: 7.1
+  from: bedroom2
+  to: bedroom1
+- cost: 0.08
+  from: home gym
+  to: home gym
+- cost: 0.08
+  from: home gym
+  to: home gym
+- cost: 4.18
+  from: home gym
+  to: bedroom2
+- cost: 4.18
+  from: bedroom2
+  to: home gym
+- cost: 1.4
+  from: home gym
+  to: gym
+- cost: 1.4
+  from: gym
+  to: home gym
+- cost: 4.1
+  from: home gym
+  to: bedroom2
+- cost: 4.1
+  from: bedroom2
+  to: home gym
+- cost: 1.4
+  from: home gym
+  to: gym
+- cost: 1.4
+  from: gym
+  to: home gym
+- cost: 4.42
+  from: bedroom2
+  to: gym
+- cost: 4.42
+  from: gym
+  to: bedroom2
 nodes:
 - features:
   - Coordinate relative to the camera frame:
@@ -115,9 +171,9 @@ nodes:
     object: bed
   name: living room
   pose:
-  - -1.4468238353729248
-  - 1.5158894062042236
-  - -1.1936787366867065
+  - 1.7757316827774048
+  - 0.46944716572761536
+  - -2.1757595539093018
 - features:
   - Coordinate relative to the camera frame:
     - 1.981
@@ -137,7 +193,7 @@ nodes:
   name: entrance hall
   pose:
   - 4.134414529800415
-  - 4.2053980827331543
+  - 4.205398082733154
   - -1.2206203937530518
 - features: []
   name: home gym
@@ -163,6 +219,19 @@ nodes:
 - features: []
   name: bedroom2
   pose:
-  - -4.52377427220344543
+  - -4.523774272203445
   - 0.857258987426758
   - 0.261378002166748
+- features:
+  - Coordinate relative to the camera frame:
+    - 0.764207124710083
+    - -0.06151857100821
+    Coordinate relative to the world frame:
+    - -1.848167503622862
+    - -2.5856269233572005
+    object: dumbbell rack
+  name: gym
+  pose:
+  - -1.246537685394287
+  - -2.1104021072387695
+  - -2.392716646194458

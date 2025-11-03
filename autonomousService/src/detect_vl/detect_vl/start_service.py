@@ -33,6 +33,7 @@ from scripts.service_vl import GroundingDINOInfer
 import scripts.service_lm as lm
 import scripts.ans2json as ans2json
 from scripts.memory_builder import MemoryBuilder
+from scripts.motion_planner import DStarLitePlanner
 import yaml
 
 # Set environment variable for display
@@ -52,6 +53,7 @@ class ServiceNode(Node):
         self.get_logger().info("🎮 Configured GroundingDINO for simulation mode")
         
         self.memory_builder = MemoryBuilder()
+        self.motion_planner = None  # Will be initialized after memory file is set
         
         # Image data
         self.rgb_image = None
@@ -85,10 +87,33 @@ class ServiceNode(Node):
         # File paths
         self.memory_file = "/src/memory.yaml"
         
+        # Initialize motion planner with workspace path
+        workspace_root = self._find_workspace_root()
+        memory_path = os.path.join(workspace_root, "autonomousService", "src", "memory.yaml")
+        if os.path.exists(memory_path):
+            self.motion_planner = DStarLitePlanner(memory_path)
+            self.get_logger().info(f"🗺️ Motion planner initialized with: {memory_path}")
+        else:
+            self.get_logger().warn(f"⚠️ Memory file not found at {memory_path}, motion planner not initialized")
+        
         self._setup_subscriptions_and_publishers()
         self._setup_timers()
         
         self.get_logger().info("ServiceNode started - waiting for images and camera2map messages...")
+    
+    def _find_workspace_root(self):
+        """Find the workspace root directory"""
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Look for workspace root by going up directories
+        while current_dir != os.path.dirname(current_dir):  # Stop at filesystem root
+            # Check if this looks like a workspace root
+            if os.path.exists(os.path.join(current_dir, 'autonomousService')):
+                return current_dir
+            current_dir = os.path.dirname(current_dir)
+        
+        # Default to /home/tamir/thesis if not found
+        return "/home/tamir/thesis"
 
     def _setup_subscriptions_and_publishers(self):
         """Initialize ROS2 subscriptions and publishers"""
@@ -293,11 +318,22 @@ class ServiceNode(Node):
 
         if rect is None:
             print(f"❌ No object found for '{obj}'")
+            print("💡 Trying alternative approach using motion planner...")
+            
+            # Try using motion planner to find alternative route
+            if self.motion_planner:
+                success = self._navigate_with_motion_planner(obj, relation)
+                if success:
+                    return True
+            
+            # If motion planner also fails, show troubleshooting suggestions
+            print("❌ Motion planner could not find the object either")
             print("💡 Troubleshooting suggestions:")
             print("   1. Check if the object is clearly visible in the camera view")
             print("   2. Try using more descriptive terms (e.g., 'blue exercise ball' instead of 'ball')")
             print("   3. Ensure good lighting in the simulation environment")
             print("   4. The object might be too far away or partially occluded")
+            print("   5. Make sure the object is recorded in memory.yaml")
             return False
         
         dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
@@ -375,6 +411,195 @@ class ServiceNode(Node):
             print(f"Robot state: {self.robot_state}")
             time.sleep(0.5)
         print("Turn completed!")
+    
+    # ============================================================================
+    # MOTION PLANNING FOR BLOCKED PATHS
+    # ============================================================================
+    
+    def _find_object_in_memory(self, obj_name: str):
+        """
+        Find an object in memory.yaml and return its room and coordinates
+        
+        Args:
+            obj_name: Name of the object to find
+            
+        Returns:
+            tuple: (room_name, coordinates, node_id) or (None, None, None) if not found
+        """
+        if not self.motion_planner:
+            return None, None, None
+        
+        # Search through all nodes in the motion planner
+        for node_id, node in self.motion_planner.nodes.items():
+            # Check if this is an object node and matches our target
+            if node.node_type.value == "object" and node.features:
+                for feature in node.features:
+                    if 'object' in feature and obj_name.lower() in feature['object'].lower():
+                        # Extract room name from node_id (format: room_object_idx)
+                        room_name = node_id.split('_')[0]
+                        coords = feature.get('Coordinate relative to the world frame', None)
+                        self.get_logger().info(f"🔍 Found '{obj_name}' in room '{room_name}' at coordinates {coords}")
+                        return room_name, coords, node_id
+        
+        return None, None, None
+    
+    def _navigate_to_room(self, room_name: str):
+        """
+        Navigate to a room using its stored coordinates
+        
+        Args:
+            room_name: Name of the room to navigate to
+            
+        Returns:
+            bool: True if navigation was successful, False otherwise
+        """
+        if not self.motion_planner:
+            return False
+        
+        # Find room node in motion planner
+        room_node = None
+        for node_id, node in self.motion_planner.nodes.items():
+            if node.node_type.value == "room" and node_id.lower() == room_name.lower():
+                room_node = node
+                break
+        
+        if not room_node:
+            self.get_logger().warn(f"⚠️ Room '{room_name}' not found in memory")
+            return False
+        
+        # Get room position (in world frame)
+        wx, wy = room_node.position.x, room_node.position.y
+        
+        # Convert world coordinates to camera frame coordinates
+        # For room navigation, we'll use a fixed distance approach
+        current_pose = self.memory_builder.camera_pose
+        if current_pose:
+            cx, cy, cyaw = current_pose
+            # Calculate relative position
+            dx = wx - cx
+            dy = wy - cy
+            
+            # Calculate distance
+            distance = math.sqrt(dx**2 + dy**2)
+            
+            # Transform to camera frame
+            # Rotate by -yaw to get camera frame coordinates
+            cam_x = dx * math.cos(-cyaw) - dy * math.sin(-cyaw)
+            cam_y = dx * math.sin(-cyaw) + dy * math.cos(-cyaw)
+            
+            self.get_logger().info(f"🎯 Navigating to room '{room_name}' at camera frame coords ({cam_x:.2f}, {cam_y:.2f})")
+            
+            # Create and publish navigation message
+            msg = self._create_navigation_message([], [], distance, cam_x, cam_y)
+            self.target_pub.publish(msg)
+            
+            print(f"📍 Sent goal for room '{room_name}' at coordinates ({cam_x:.2f}, {cam_y:.2f}), distance: {distance:.2f}m")
+            return True
+        else:
+            self.get_logger().warn("⚠️ Current camera pose not available")
+            return False
+    
+    def _navigate_with_motion_planner(self, obj_name: str, relation: str):
+        """
+        Use motion planner to find alternative path when object is not directly visible
+        
+        Args:
+            obj_name: Name of the target object
+            relation: Spatial relation (near, at, through)
+            
+        Returns:
+            bool: True if navigation was successful, False otherwise
+        """
+        self.get_logger().info(f"🗺️ Object '{obj_name}' not visible. Using motion planner to find alternative route...")
+        
+        # Find object in memory
+        room_name, coords, node_id = self._find_object_in_memory(obj_name)
+        
+        if not room_name or not coords:
+            self.get_logger().warn(f"⚠️ Object '{obj_name}' not found in memory.yaml")
+            return False
+        
+        # Determine current location (use last known room or estimate)
+        current_location = self.memory_builder.last_room_type if self.memory_builder.last_room_type else "entrance hall"
+        
+        self.get_logger().info(f"📍 Current location: {current_location}")
+        self.get_logger().info(f"🎯 Target: {obj_name} in room '{room_name}'")
+        
+        # Plan path using motion planner
+        path = self.motion_planner.plan_path(current_location, room_name)
+        
+        if not path or len(path) == 0:
+            self.get_logger().warn(f"⚠️ No path found from '{current_location}' to '{room_name}'")
+            return False
+        
+        self.get_logger().info(f"🛤️ Planned path: {' -> '.join(path)}")
+        
+        # Navigate through the path (skip first node if it's current location)
+        start_idx = 1 if len(path) > 1 and path[0].lower() == current_location.lower() else 0
+        
+        for i in range(start_idx, len(path)):
+            waypoint = path[i]
+            node = self.motion_planner.nodes.get(waypoint)
+            
+            if not node:
+                continue
+            
+            # Check if this is a room node
+            if node.node_type.value == "room":
+                self.get_logger().info(f"🚶 Navigating to intermediate room: {waypoint}")
+                if self._navigate_to_room(waypoint):
+                    self._wait_for_goal_completion()
+                    time.sleep(1)
+        
+        # Now try to detect the object directly since we're in the right room
+        self.get_logger().info(f"✅ Arrived at room '{room_name}'. Attempting to detect '{obj_name}'...")
+        time.sleep(2)  # Wait for camera to stabilize
+        
+        # Try to detect the object now
+        img_detect, rect, center = self.VL.infer(self.rgb_image, obj_name + ".")
+        
+        if rect is not None:
+            self.get_logger().info(f"✅ Object '{obj_name}' now visible! Navigating to it...")
+            dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
+            
+            if dis and dis > 0:
+                # Adjust distance based on relation
+                dis = self._adjust_distance_by_relation(dis, relation)
+                if dis < 0.0:
+                    dis = 0.0
+                
+                # Create and publish navigation message
+                msg = self._create_navigation_message(rect, center, dis, wx, wy)
+                self.target_pub.publish(msg)
+                print(f"Goal sent for object '{obj_name}' at coordinates ({wx:.2f}, {wy:.2f}), distance: {dis:.2f}m")
+                return True
+        else:
+            # If still not visible, navigate to stored coordinates
+            self.get_logger().info(f"🎯 Object still not visible. Navigating to stored coordinates...")
+            if len(coords) >= 2:
+                # Navigate to stored world coordinates
+                current_pose = self.memory_builder.camera_pose
+                if current_pose:
+                    cx, cy, cyaw = current_pose
+                    dx = coords[0] - cx
+                    dy = coords[1] - cy
+                    distance = math.sqrt(dx**2 + dy**2)
+                    
+                    # Adjust distance based on relation
+                    distance = self._adjust_distance_by_relation(distance, relation)
+                    if distance < 0.0:
+                        distance = 0.0
+                    
+                    # Transform to camera frame
+                    cam_x = dx * math.cos(-cyaw) - dy * math.sin(-cyaw)
+                    cam_y = dx * math.sin(-cyaw) + dy * math.cos(-cyaw)
+                    
+                    msg = self._create_navigation_message([], [], distance, cam_x, cam_y)
+                    self.target_pub.publish(msg)
+                    print(f"Goal sent for object '{obj_name}' using stored coordinates")
+                    return True
+        
+        return False
 
 
 def main(args=None):
