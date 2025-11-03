@@ -1,0 +1,168 @@
+edges:
+- cost: 6.2
+  from: living room
+  to: entrance hall
+- cost: 6.2
+  from: entrance hall
+  to: living room
+- cost: 1.6
+  from: entrance hall
+  to: dining room
+- cost: 1.6
+  from: dining room
+  to: entrance hall
+- cost: 2.3
+  from: entrance hall
+  to: kitchen
+- cost: 2.3
+  from: kitchen
+  to: entrance hall
+- cost: 0.77
+  from: dining room
+  to: kitchen
+- cost: 0.77
+  from: kitchen
+  to: dining room
+- cost: 5.24
+  from: living room
+  to: bedroom1
+- cost: 5.24
+  from: bedroom1
+  to: living room
+- cost: 2.4
+  from: living room
+  to: home gym
+- cost: 2.4
+  from: home gym
+  to: living room
+- cost: 2.4
+  from: home gym
+  to: bedroom2
+- cost: 3.15
+  from: living room
+  to: bedroom2
+- cost: 3.15
+  from: bedroom2
+  to: living room
+
+nodes:
+- features:
+  - Coordinate relative to the camera frame:
+    - 3.26
+    - -0.8185303024494958
+    Coordinate relative to the world frame:
+    - 6.12831016857036
+    - 8.31056088591447
+    confidence: 0.9093316197395325
+    depth: 3.26
+    object: chair
+  - Coordinate relative to the camera frame:
+    - 2.809
+    - -0.11844596925671791
+    Coordinate relative to the world frame:
+    - 5.466794575444386
+    - 7.804679285504684
+    confidence: 0.8067523837089539
+    depth: 2.809
+    object: chair
+  name: dining room
+  pose:
+  - 5.343911647796631
+  - 5.240716457366943
+  - 1.984869360923767
+- features:
+  - Coordinate relative to the camera frame:
+    - 2.97
+    - -1.707747153754744
+    Coordinate relative to the world frame:
+    - 6.158876715463555
+    - 2.960545041629844
+    confidence: 0.8073176145553589
+    depth: 2.97
+    object: person
+  name: kitchen
+  pose:
+  - 5.515822887420654
+  - 5.989790916442871
+  - -0.6477218270301819
+- features:
+  - Coordinate relative to the camera frame:
+    - 2.82
+    - 1.145858090236516
+    Coordinate relative to the world frame:
+    - 8.457119440977552
+    - 5.197719910601975
+    confidence: 0.9282358884811401
+    depth: 2.82
+    object: person
+  - Coordinate relative to the camera frame:
+    - 2.303
+    - -0.9578544869091884
+    Coordinate relative to the world frame:
+    - 0.9787408611867557
+    - 7.2925665660844805
+    confidence: 0.822079062461853
+    depth: 2.303
+    object: chair
+  - Coordinate relative to the camera frame:
+    - 1.562
+    - 0.002993828343619427
+    Coordinate relative to the world frame:
+    - -1.436480178334882
+    - 5.063865772466075
+    confidence: 0.6631848812103271
+    depth: 1.562
+    object: bed
+  name: living room
+  pose:
+  - -1.4468238353729248
+  - 1.5158894062042236
+  - -1.1936787366867065
+- features:
+  - Coordinate relative to the camera frame:
+    - 1.981
+    - -0.9340399432667612
+    Coordinate relative to the world frame:
+    - -2.473247791481825
+    - 7.429560683264898
+    confidence: 0.8037379384040833
+    depth: 1.981
+    object: bed
+  name: bedroom1
+  pose:
+  - -0.42377427220344543
+  - 6.657258987426758
+  - -3.061378002166748
+- features: []
+  name: entrance hall
+  pose:
+  - 4.134414529800415
+  - 4.2053980827331543
+  - -1.2206203937530518
+- features: []
+  name: home gym
+  pose:
+  - -0.6936394572257996
+  - -0.8234481811523438
+  - -2.2839951515197754
+- features:
+  - Coordinate relative to the camera frame:
+    - 1.624
+    - -0.8559819066968222
+    Coordinate relative to the world frame:
+    - -2.5542738384310906
+    - -1.2118593286241635
+    confidence: 0.7175184488296509
+    depth: 1.624
+    object: bed
+  name: home gym
+  pose:
+  - -0.7674567103385925
+  - -0.7907114028930664
+  - -2.425041913986206
+- features: []
+  name: bedroom2
+  pose:
+  - -4.52377427220344543
+  - 0.857258987426758
+  - 0.261378002166748

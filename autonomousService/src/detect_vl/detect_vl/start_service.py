@@ -305,7 +305,16 @@ class ServiceNode(Node):
             return False
         
         # Adjust distance based on spatial relation
+        orig_dis = dis
         dis = self._adjust_distance_by_relation(dis, relation)
+        if dis < 0.0:
+            dis = 0.0
+
+        # Recompute coordinates along the same camera ray to match adjusted distance
+        if orig_dis and orig_dis > 0.0:
+            scale = dis / orig_dis
+            wx *= scale
+            wy *= scale
         
         # Create and publish navigation message
         msg = self._create_navigation_message(rect, center, dis, wx, wy)
