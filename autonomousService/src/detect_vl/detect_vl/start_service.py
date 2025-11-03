@@ -64,7 +64,7 @@ class ServiceNode(Node):
         self.rect: list[int] | None = None
         
         # State variables
-        self.robot_state = "unknown"
+        self.robot_state = "navigating"
         self.environment_context = ""
         self.current_room = None
         self.room_pose = [0.0, 0.0, 0.0]
@@ -369,7 +369,7 @@ class ServiceNode(Node):
         self.target_pub.publish(msg)
         print(f"Turn command: {msg.theta}")
         print("Waiting for turn completion...")
-        time.sleep(3)
+        time.sleep(1)
         
         while self.robot_state != "reachGoal":
             print(f"Robot state: {self.robot_state}")
@@ -432,7 +432,7 @@ def main(args=None):
                         node._wait_for_goal_completion()
                         idx += 1
                         goal_sent = False
-                        time.sleep(3)
+                        time.sleep(1)
                         
                 elif act and act.lower() != "null":
                     node._process_turn_action(act)
