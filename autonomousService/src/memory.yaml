@@ -14,12 +14,12 @@ edges:
 - cost: 4.42
   from: living room
   to: entrance hall
-- cost: 0.76
+- cost: 1.05
   from: living room
   to: home gym
-- cost: 2.84
+- cost: 1.05
   from: living room
-  to: home gym
+  to: gym
 - cost: 5.18
   from: bedroom1
   to: entrance hall
@@ -29,23 +29,26 @@ edges:
 - cost: 7.1
   from: bedroom1
   to: bedroom2
-- cost: 5.16
+- cost: 5.45
   from: entrance hall
   to: home gym
-- cost: 2.35
+- cost: 5.45
+  from: entrance hall
+  to: gym
+- cost: 1.89
   from: home gym
   to: home gym
-- cost: 3.32
+- cost: 5.7
+  from: home gym
+  to: bedroom2
+- cost: 0.0
   from: home gym
   to: gym
 - cost: 4.1
   from: home gym
   to: bedroom2
-- cost: 1.4
+- cost: 1.89
   from: home gym
-  to: gym
-- cost: 4.45
-  from: bedroom2
   to: gym
 nodes:
 - features:
@@ -141,12 +144,40 @@ nodes:
   - 4.134414529800415
   - 4.205398082733154
   - -1.2206203937530518
-- features: []
+- features:
+  - Coordinate relative to the camera frame:
+    - 3.5377700328826904
+    - 1.0984757644171346
+    Coordinate relative to the world frame:
+    - -1.8390345731008915
+    - -2.6056276014545525
+    object: exercise ball
+  - Coordinate relative to the camera frame:
+    - 3.662593126296997
+    - 1.439091484055055
+    Coordinate relative to the world frame:
+    - -1.8317360553873545
+    - -2.96832114255111
+    object: weight rack
+  - Coordinate relative to the camera frame:
+    - 1.904508113861084
+    - -0.5876984826381617
+    Coordinate relative to the world frame:
+    - -0.9290442069819316
+    - -0.44168545316839314
+    object: mirror
+  - Coordinate relative to the camera frame:
+    - 3.5560824871063232
+    - 1.0496352647187752
+    Coordinate relative to the world frame:
+    - -1.8746197773327289
+    - -2.5675202556550922
+    object: weight bench
   name: home gym
   pose:
-  - 1.5200369358062744
-  - -0.24460966885089874
-  - -2.2447876930236816
+  - 1.0578651428222656
+  - -0.29860222339630127
+  - -2.7700998783111572
 - features:
   - Coordinate relative to the camera frame:
     - 1.624
@@ -183,8 +214,15 @@ nodes:
     - -2.88462482326531
     - -5.60089809960788
     object: weights
+  - Coordinate relative to the camera frame:
+    - 3.5377414226531982
+    - 1.098466880955683
+    Coordinate relative to the world frame:
+    - -1.8368529096433042
+    - -2.6054432382820085
+    object: exercise ball
   name: gym
   pose:
-  - -1.2154498100280762
-  - -2.1194536685943604
-  - -2.5324699878692627
+  - 1.0603216886520386
+  - -0.2970621585845947
+  - -2.769885778427124

@@ -431,10 +431,30 @@ class ServiceNode(Node):
     def _wait_for_goal_completion(self):
         """Wait for robot to reach the current goal"""
         print("Waiting for robot to reach goal...")
+        timeout = 20.0  # 20 second timeout
+        start_time = time.time()
+        
         while self.robot_state != "reachGoal":
-            print(f"Robot state: {self.robot_state}")
+            elapsed = time.time() - start_time
+            
+            # Check for timeout
+            if elapsed > timeout:
+                print(f"⚠️ Warning: Goal timeout after {timeout}s. Current state: {self.robot_state}")
+                self._publish_status(f"⚠️ Navigation timeout - assuming goal reached")
+                break
+            
+            # Print status less frequently (every 2 seconds instead of 0.5)
+            if int(elapsed * 2) % 4 == 0:  # Print every 2 seconds
+                print(f"Robot state: {self.robot_state} (elapsed: {elapsed:.1f}s)")
+            
             time.sleep(0.5)
-        print("Robot reached goal!")
+        
+        if self.robot_state == "reachGoal":
+            print("✅ Robot reached goal!")
+            self._publish_status("✅ Reached goal!")
+        
+        # Reset state for next goal
+        time.sleep(0.5)  # Small delay to ensure message is sent
 
     def _process_turn_action(self, act):
         """Process turn action"""
