@@ -139,13 +139,32 @@ class DStarLitePlanner:
         """Build the graph with edges between all nodes"""
         node_ids = list(self.nodes.keys())
         
-        for i, node1_id in enumerate(node_ids):
-            for j, node2_id in enumerate(node_ids):
-                if i != j:
-                    node1 = self.nodes[node1_id]
-                    node2 = self.nodes[node2_id]
-                    cost = self.calculate_edge_cost(node1, node2)
-                    self.edges[(node1_id, node2_id)] = cost
+        # First, load edges from memory.yaml if available
+        # These edges are undirected (bidirectional)
+        try:
+            with open(self.memory_file, 'r') as file:
+                data = yaml.safe_load(file)
+                
+            for edge_data in data.get('edges', []):
+                from_node = edge_data.get('from', '')
+                to_node = edge_data.get('to', '')
+                cost = edge_data.get('cost', 0.0)
+                
+                # Add edge in both directions (undirected edge)
+                if from_node in self.nodes and to_node in self.nodes:
+                    self.edges[(from_node, to_node)] = cost
+                    self.edges[(to_node, from_node)] = cost
+                    
+        except Exception as e:
+            print(f"Warning: Could not load edges from memory file: {e}")
+            # Fall back to creating edges between all nodes
+            for i, node1_id in enumerate(node_ids):
+                for j, node2_id in enumerate(node_ids):
+                    if i != j:
+                        node1 = self.nodes[node1_id]
+                        node2 = self.nodes[node2_id]
+                        cost = self.calculate_edge_cost(node1, node2)
+                        self.edges[(node1_id, node2_id)] = cost
     
     def get_neighbors(self, node_id: str) -> List[str]:
         """Get all neighbors of a node"""

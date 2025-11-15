@@ -75,6 +75,10 @@ class ServiceNode(Node):
         self.update_flag = 1
         self.suppress_background_activity = False
         
+        # GUI command queue
+        self.command_queue = []
+        self.processing_command = False
+        
         # Camera2map monitoring
         self.last_camera2map_time = 0
         self.camera2map_warning_threshold = 5.0
@@ -152,14 +156,26 @@ class ServiceNode(Node):
             '/robot_state', 
             self.robot_state_update_callback, 10
         )
+        self.create_subscription(
+            String,
+            '/service_question',
+            self.gui_command_callback, 10
+        )
+        self.create_subscription(
+            String,
+            '/environment_context',
+            self.environment_context_callback, 10
+        )
         
         # Publishers
         self.target_pub = self.create_publisher(RectDepth, 'task/rect_depth', 10)
+        self.status_pub = self.create_publisher(String, '/robot_status', 10)
 
     def _setup_timers(self):
         """Initialize ROS2 timers"""
         self.update_memory_map = self.create_timer(1.0, self.update_map)
         self.camera2map_monitor_timer = self.create_timer(2.0, self.monitor_camera2map_topic)
+        self.command_processor_timer = self.create_timer(0.5, self.process_command_queue)
 
     def suppress_background_logging(self, suppress=True):
         """Enable or disable background activity logging"""
@@ -214,6 +230,33 @@ class ServiceNode(Node):
         self.robot_state = msg.data
         if not self.suppress_background_activity:
             self.get_logger().info(f"🤖 Robot state updated to: {self.robot_state}")
+        
+        # Publish status to GUI
+        if self.robot_state == "reachGoal":
+            self._publish_status("✅ Reached goal!")
+    
+    def gui_command_callback(self, msg):
+        """Handle commands from GUI"""
+        command = msg.data.strip()
+        if command:
+            self.get_logger().info(f"📨 Received GUI command: {command}")
+            self.command_queue.append(command)
+            self._publish_status(f"📝 Command received: {command}")
+    
+    def environment_context_callback(self, msg):
+        """Handle environment context updates from GUI"""
+        context = msg.data.strip()
+        if context:
+            self.environment_context = context
+            self.get_logger().info(f"🌍 Environment context updated: {context}")
+            self._publish_status(f"✅ Environment set to: {context}")
+    
+    def _publish_status(self, message: str):
+        """Publish status message to GUI"""
+        msg = String()
+        msg.data = message
+        self.status_pub.publish(msg)
+        self.get_logger().info(f"📤 Status to GUI: {message}")
 
     # ============================================================================
     # TIMER FUNCTIONS
@@ -317,8 +360,8 @@ class ServiceNode(Node):
             cv2.waitKey(1)
 
         if rect is None:
-            print(f"❌ No object found for '{obj}'")
-            print("💡 Trying alternative approach using motion planner...")
+            self._publish_status(f"❌ Object '{obj}' not visible")
+            self._publish_status("💡 Trying motion planner for alternative route...")
             
             # Try using motion planner to find alternative route
             if self.motion_planner:
@@ -327,13 +370,8 @@ class ServiceNode(Node):
                     return True
             
             # If motion planner also fails, show troubleshooting suggestions
-            print("❌ Motion planner could not find the object either")
-            print("💡 Troubleshooting suggestions:")
-            print("   1. Check if the object is clearly visible in the camera view")
-            print("   2. Try using more descriptive terms (e.g., 'blue exercise ball' instead of 'ball')")
-            print("   3. Ensure good lighting in the simulation environment")
-            print("   4. The object might be too far away or partially occluded")
-            print("   5. Make sure the object is recorded in memory.yaml")
+            self._publish_status(f"❌ Could not find '{obj}' in view or memory")
+            self._publish_status("💡 Make sure the object is visible or recorded in memory")
             return False
         
         dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
@@ -356,7 +394,9 @@ class ServiceNode(Node):
         msg = self._create_navigation_message(rect, center, dis, wx, wy)
         self.target_pub.publish(msg)
         
-        print(f"Goal sent for object '{obj}' at coordinates ({wx:.2f}, {wy:.2f}), distance: {dis:.2f}m")
+        status_msg = f"🎯 Navigating to '{obj}' at ({wx:.2f}, {wy:.2f}), distance: {dis:.2f}m"
+        print(status_msg)
+        self._publish_status(status_msg)
         return True
 
     def _adjust_distance_by_relation(self, distance, relation):
@@ -600,80 +640,125 @@ class ServiceNode(Node):
                     return True
         
         return False
-
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = ServiceNode()
-
-    threading.Thread(target=rclpy.spin, args=(node,), daemon=True).start()
     
-    try:
-        while True:
+    # ============================================================================
+    # COMMAND PROCESSING
+    # ============================================================================
+    
+    def process_command_queue(self):
+        """Timer callback to process commands from the queue"""
+        if not self.processing_command and len(self.command_queue) > 0:
+            command = self.command_queue.pop(0)
+            # Run in a separate thread to avoid blocking the timer
+            threading.Thread(target=self.process_navigation_command, args=(command,), daemon=True).start()
+    
+    def process_navigation_command(self, question: str):
+        """
+        Process a navigation command from the GUI
+        
+        Args:
+            question: Navigation command from user
+        """
+        if self.processing_command:
+            self._publish_status("⚠️ Already processing a command, please wait...")
+            return
+        
+        self.processing_command = True
+        
+        try:
             # Wait for camera data
-            if node.rgb_image is None:
-                time.sleep(1)
-                continue
-            
-            # Get user input with background activity suppressed
-            node.suppress_background_logging(True)
-            
-            context = input("\n📝 Please provide context about the environment (e.g., Warehouse, Supermarket, etc):\n> ").strip()
-            node.environment_context = context
-            
-            question = input("\nEnter your question (type Ctrl+C to exit):\n> ").strip()
-            if not question:
-                print("Invalid question")
-                continue
+            if self.rgb_image is None:
+                self._publish_status("⚠️ Waiting for camera data...")
+                retry_count = 0
+                while self.rgb_image is None and retry_count < 10:
+                    time.sleep(0.5)
+                    retry_count += 1
                 
-            node.suppress_background_logging(False)
+                if self.rgb_image is None:
+                    self._publish_status("❌ Camera data not available")
+                    self.processing_command = False
+                    return
+            
+            self._publish_status(f"🤔 Processing command: {question}")
             
             # Process command with GPT
             answer = ans2json.ans2json(lm.ask_gpt_ll(question))
-            print(f"\n✅ GPT-4o answer: \n{answer}")
+            self._publish_status(f"✅ Command understood")
+            self.get_logger().info(f"GPT-4o answer: {answer}")
             
-            node.turn_list = answer["turn"]
-            node.obj_list = answer["objects"]
-            node.relation_list = answer["relative"]
-            print(node.obj_list, node.turn_list, node.relation_list)
+            self.turn_list = answer["turn"]
+            self.obj_list = answer["objects"]
+            self.relation_list = answer["relative"]
             
             # Execute navigation sequence
             idx = 0
             goal_sent = False
             
-            while idx < len(node.turn_list):
-                obj = node.obj_list[idx]
-                act = node.turn_list[idx]
-                relation = node.relation_list[idx]
+            while idx < len(self.turn_list):
+                obj = self.obj_list[idx]
+                act = self.turn_list[idx]
+                relation = self.relation_list[idx]
                 
                 if obj and obj.lower() != "null":
                     if not goal_sent:
-                        if node._process_object_navigation(obj, relation, idx):
+                        if self._process_object_navigation(obj, relation, idx):
                             goal_sent = True
                         else:
+                            self._publish_status(f"⚠️ Skipping object '{obj}'")
+                            idx += 1
                             continue
                     
-                    if node.robot_state == "navigating" or goal_sent:
-                        node._wait_for_goal_completion()
+                    if self.robot_state == "navigating" or goal_sent:
+                        self._wait_for_goal_completion()
                         idx += 1
                         goal_sent = False
                         time.sleep(1)
                         
                 elif act and act.lower() != "null":
-                    node._process_turn_action(act)
+                    self._process_turn_action(act)
                     idx += 1
                     
                 else:
-                    node.get_logger().warn("Both object and action are null, skipping...")
+                    self.get_logger().warn("Both object and action are null, skipping...")
                     idx += 1
             
-            print(f"Completed {idx} navigation steps")
-            node.get_logger().info("Navigation sequence completed successfully!")
-            node.robot_state = "reachGoal"
-            break
+            self._publish_status(f"✅ Navigation sequence completed! ({idx} steps)")
+            self.get_logger().info("Navigation sequence completed successfully!")
+            self.robot_state = "reachGoal"
+            
+        except Exception as e:
+            self._publish_status(f"❌ Error: {str(e)}")
+            self.get_logger().error(f"Error processing command: {e}")
+        finally:
+            self.processing_command = False
 
+
+def main(args=None):
+    """
+    Main entry point for the service node (GUI mode)
+    
+    This version is designed to work with the robot_chat_gui.py interface.
+    Commands are received via the /service_question topic and status updates
+    are sent to /robot_status topic.
+    """
+    rclpy.init(args=args)
+    node = ServiceNode()
+    
+    # Publish initial status
+    time.sleep(1)  # Wait for publishers to be ready
+    node._publish_status("🤖 Robot service ready! Send commands via GUI.")
+    node.get_logger().info("=" * 60)
+    node.get_logger().info("🎮 GUI MODE: Waiting for commands from robot_chat_gui.py")
+    node.get_logger().info("📡 Subscribed to: /service_question")
+    node.get_logger().info("📤 Publishing to: /robot_status")
+    node.get_logger().info("=" * 60)
+    
+    try:
+        # Spin the node to process callbacks
+        rclpy.spin(node)
+        
     except KeyboardInterrupt:
-        print("⛔ Shutting down due to KeyboardInterrupt")
+        node.get_logger().info("⛔ Shutting down due to KeyboardInterrupt")
     finally:
         node.destroy_node()
         rclpy.shutdown()

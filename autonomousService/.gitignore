@@ -1,15 +1,184 @@
-# ROS 2 生成文件
+# ============================================================================
+# ROS 2 Build Files
+# ============================================================================
 build/
 install/
 log/
+*.egg-info/
+COLCON_IGNORE
+
+# ============================================================================
+# Python
+# ============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+dist/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
 .vscode/
-core/
 .cursor/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.cproject
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# VS Code
+.history/
+
+# ============================================================================
+# Operating System
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================================================
+# ROS Specific
+# ============================================================================
+core/
+devel/
+*.bag
+*.db3
+*.db3-shm
+*.db3-wal
+
+# Data files
+poses.csv
 poses.csv/
 image_data/
-# model files
+*.csv
+
+# ============================================================================
+# Model Files and Weights
+# ============================================================================
 *.pt
+*.pth
+*.onnx
+*.pb
+*.tflite
+*.h5
+*.pkl
+*.pickle
+weights/
+checkpoints/
+
+# ============================================================================
+# Media Files (except essential ones)
+# ============================================================================
 *.png
 *.jpg
 *.jpeg
+*.gif
+*.bmp
+*.tiff
+*.ico
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.mp3
+*.wav
+
+# ============================================================================
+# Documentation Build
+# ============================================================================
+docs/_build/
+site/
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+*~
+
+# ============================================================================
+# Environment and Secrets
+# ============================================================================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets.yaml
+credentials.json
+
+# ============================================================================
+# Misc
+# ============================================================================
+*.orig
+*.rej
+.tags
+tags
+TAGS
 

@@ -2,105 +2,51 @@ edges:
 - cost: 0.77
   from: dining room
   to: kitchen
-- cost: 0.77
-  from: kitchen
-  to: dining room
 - cost: 5.94
   from: dining room
   to: bedroom1
-- cost: 5.94
-  from: bedroom1
-  to: dining room
 - cost: 1.59
   from: dining room
   to: entrance hall
-- cost: 1.59
-  from: entrance hall
-  to: dining room
 - cost: 5.98
   from: kitchen
   to: bedroom1
-- cost: 5.98
-  from: bedroom1
-  to: kitchen
 - cost: 4.42
   from: living room
   to: entrance hall
-- cost: 4.42
-  from: entrance hall
-  to: living room
-- cost: 2.79
-  from: living room
-  to: home gym
-- cost: 2.79
-  from: home gym
-  to: living room
-- cost: 2.84
+- cost: 0.76
   from: living room
   to: home gym
 - cost: 2.84
-  from: home gym
-  to: living room
+  from: living room
+  to: home gym
 - cost: 5.18
   from: bedroom1
   to: entrance hall
-- cost: 5.18
+- cost: 7.46
+  from: bedroom1
+  to: home gym
+- cost: 7.1
+  from: bedroom1
+  to: bedroom2
+- cost: 5.16
   from: entrance hall
-  to: bedroom1
-- cost: 7.49
-  from: bedroom1
   to: home gym
-- cost: 7.49
-  from: home gym
-  to: bedroom1
-- cost: 7.46
-  from: bedroom1
-  to: home gym
-- cost: 7.46
-  from: home gym
-  to: bedroom1
-- cost: 7.1
-  from: bedroom1
-  to: bedroom2
-- cost: 7.1
-  from: bedroom2
-  to: bedroom1
-- cost: 0.08
+- cost: 2.35
   from: home gym
   to: home gym
-- cost: 0.08
-  from: home gym
-  to: home gym
-- cost: 4.18
-  from: home gym
-  to: bedroom2
-- cost: 4.18
-  from: bedroom2
-  to: home gym
-- cost: 1.4
+- cost: 3.32
   from: home gym
   to: gym
-- cost: 1.4
-  from: gym
-  to: home gym
 - cost: 4.1
   from: home gym
   to: bedroom2
-- cost: 4.1
-  from: bedroom2
-  to: home gym
 - cost: 1.4
   from: home gym
   to: gym
-- cost: 1.4
-  from: gym
-  to: home gym
-- cost: 4.42
+- cost: 4.45
   from: bedroom2
   to: gym
-- cost: 4.42
-  from: gym
-  to: bedroom2
 nodes:
 - features:
   - Coordinate relative to the camera frame:
@@ -198,9 +144,9 @@ nodes:
 - features: []
   name: home gym
   pose:
-  - -0.6936394572257996
-  - -0.8234481811523438
-  - -2.2839951515197754
+  - 1.5200369358062744
+  - -0.24460966885089874
+  - -2.2447876930236816
 - features:
   - Coordinate relative to the camera frame:
     - 1.624
@@ -230,8 +176,15 @@ nodes:
     - -1.848167503622862
     - -2.5856269233572005
     object: dumbbell rack
+  - Coordinate relative to the camera frame:
+    - 3.3608763217926025
+    - 1.9002923197930344
+    Coordinate relative to the world frame:
+    - -2.88462482326531
+    - -5.60089809960788
+    object: weights
   name: gym
   pose:
-  - -1.246537685394287
-  - -2.1104021072387695
-  - -2.392716646194458
+  - -1.2154498100280762
+  - -2.1194536685943604
+  - -2.5324699878692627

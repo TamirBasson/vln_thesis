@@ -101,19 +101,13 @@ class MemoryBuilder:
                     print(f"  → Directly connected: {directly_connected}")
                     
                     if directly_connected:
-                        # Create bidirectional edges
-                        edge1 = {
-                        "from": node1["name"],
-                        "to": node2["name"],
-                        "cost": round(distance, 2)
-                    }
-                        edge2 = {
-                            "from": node2["name"],
-                            "to": node1["name"],
+                        # Create single undirected edge (will be treated as bidirectional)
+                        edge = {
+                            "from": node1["name"],
+                            "to": node2["name"],
                             "cost": round(distance, 2)
                         }
-                        self.memory_data["edges"].append(edge1)
-                        self.memory_data["edges"].append(edge2)
+                        self.memory_data["edges"].append(edge)
                         
                         # Debug: print when edge is created
                         print(f"✅ Created edge: {node1['name']} ↔ {node2['name']} (distance: {distance:.2f}m)")
