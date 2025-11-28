@@ -2,7 +2,7 @@ import sys
 import json
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLineEdit,
-    QPushButton, QLabel, QHBoxLayout, QFrame
+    QPushButton, QLabel, QHBoxLayout, QFrame, QComboBox
 )
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QFont, QColor, QLinearGradient, QPainter
@@ -30,6 +30,7 @@ class RobotChatNode(Node):
         self.nav_pub = self.create_publisher(String, 'navigation_command', 10)
         self.question_pub = self.create_publisher(String, 'service_question', 10)
         self.context_pub = self.create_publisher(String, 'environment_context', 10)
+        self.location_pub = self.create_publisher(String, 'initial_location', 10)
         self.subscription = self.create_subscription(
             String, 'robot_status', self.listener_callback, 10)
         self.last_status_msg = ""
@@ -41,6 +42,12 @@ class RobotChatNode(Node):
         msg.data = context
         self.context_pub.publish(msg)
         self.get_logger().info(f'Set environment context: "{context}"')
+    
+    def send_initial_location(self, location: str):
+        msg = String()
+        msg.data = location
+        self.location_pub.publish(msg)
+        self.get_logger().info(f'Set initial location: "{location}"')
 
     def send_nav(self, command: str):
         msg = String()
@@ -96,6 +103,29 @@ class RobotChatGUI(QWidget):
         context_layout.addWidget(self.context_input)
         context_layout.addWidget(context_button)
         layout.addLayout(context_layout)
+        
+        # Initial location section (room in the graph)
+        location_layout = QHBoxLayout()
+        location_label = QLabel("Robot Location:")
+        location_label.setStyleSheet("font-weight: bold; font-size: 12px;")
+        self.location_combo = QComboBox()
+        self.location_combo.addItems([
+            "-- Select Room --",
+            "home gym",
+            "living room",
+            "bedroom1",
+            "bedroom2",
+            "kitchen",
+            "dining room",
+            "entrance hall"
+        ])
+        self.location_combo.setStyleSheet("padding: 5px; font-size: 12px;")
+        location_button = QPushButton("Set Location")
+        location_button.clicked.connect(self.on_set_location)
+        location_layout.addWidget(location_label)
+        location_layout.addWidget(self.location_combo)
+        location_layout.addWidget(location_button)
+        layout.addLayout(location_layout)
 
         self.chat_display = QWebEngineView()
         self.chat_html = """
@@ -130,6 +160,12 @@ class RobotChatGUI(QWidget):
         if context:
             self.ros_node.send_context(context)
             self.append_chat("robot", "System:", f"Environment context set to: {context}")
+    
+    def on_set_location(self):
+        location = self.location_combo.currentText()
+        if location and location != "-- Select Room --":
+            self.ros_node.send_initial_location(location)
+            self.append_chat("robot", "System:", f"📍 Robot location set to: {location}")
     
     def on_send(self):
         text = self.input_line.text().strip()

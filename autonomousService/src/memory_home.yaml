@@ -17,9 +17,9 @@ edges:
 - cost: 1.05
   from: living room
   to: home gym
-- cost: 1.05
+- cost: 3.5
   from: living room
-  to: gym
+  to: bedroom2
 - cost: 5.18
   from: bedroom1
   to: entrance hall
@@ -32,24 +32,15 @@ edges:
 - cost: 5.45
   from: entrance hall
   to: home gym
-- cost: 5.45
-  from: entrance hall
-  to: gym
-- cost: 1.89
-  from: home gym
-  to: home gym
 - cost: 5.7
   from: home gym
   to: bedroom2
-- cost: 0.0
-  from: home gym
-  to: gym
 - cost: 4.1
   from: home gym
   to: bedroom2
-- cost: 1.89
-  from: home gym
-  to: gym
+- cost: 0.7
+  from: bedroom2
+  to: bed
 nodes:
 - features:
   - Coordinate relative to the camera frame:
@@ -109,30 +100,12 @@ nodes:
     confidence: 0.822079062461853
     depth: 2.303
     object: chair
-  - Coordinate relative to the camera frame:
-    - 1.562
-    - 0.002993828343619427
-    Coordinate relative to the world frame:
-    - -1.436480178334882
-    - 5.063865772466075
-    confidence: 0.6631848812103271
-    depth: 1.562
-    object: bed
   name: living room
   pose:
   - 1.7757316827774048
   - 0.46944716572761536
   - -2.1757595539093018
-- features:
-  - Coordinate relative to the camera frame:
-    - 1.981
-    - -0.9340399432667612
-    Coordinate relative to the world frame:
-    - -2.673247791481825
-    - 4.29560683264898
-    confidence: 0.8037379384040833
-    depth: 1.981
-    object: bed
+- features: []
   name: bedroom1
   pose:
   - -0.42377427220344543
@@ -173,33 +146,6 @@ nodes:
     - -1.8746197773327289
     - -2.5675202556550922
     object: weight bench
-  name: home gym
-  pose:
-  - 1.0578651428222656
-  - -0.29860222339630127
-  - -2.7700998783111572
-- features:
-  - Coordinate relative to the camera frame:
-    - 1.624
-    - -0.8559819066968222
-    Coordinate relative to the world frame:
-    - -2.5542738384310906
-    - -1.2118593286241635
-    confidence: 0.7175184488296509
-    depth: 1.624
-    object: bed
-  name: home gym
-  pose:
-  - -0.7674567103385925
-  - -0.7907114028930664
-  - -2.425041913986206
-- features: []
-  name: bedroom2
-  pose:
-  - -4.523774272203445
-  - 0.857258987426758
-  - 0.261378002166748
-- features:
   - Coordinate relative to the camera frame:
     - 0.764207124710083
     - -0.06151857100821
@@ -214,15 +160,29 @@ nodes:
     - -2.88462482326531
     - -5.60089809960788
     object: weights
-  - Coordinate relative to the camera frame:
-    - 3.5377414226531982
-    - 1.098466880955683
-    Coordinate relative to the world frame:
-    - -1.8368529096433042
-    - -2.6054432382820085
-    object: exercise ball
-  name: gym
+  name: home gym
   pose:
-  - 1.0603216886520386
-  - -0.2970621585845947
-  - -2.769885778427124
+  - 1.0578651428222656
+  - -0.29860222339630127
+  - -2.7700998783111572
+- features: []
+  name: home gym
+  pose:
+  - -0.7674567103385925
+  - -0.7907114028930664
+  - -2.425041913986206
+- features:
+  - Coordinate relative to the camera frame:
+    - 1.0
+    - 0.0
+    Coordinate relative to the world frame:
+    - -4.28
+    - 1.47
+    confidence: 0.9
+    depth: 1.0
+    object: bed
+  name: bedroom2
+  pose:
+  - -4.523774272203445
+  - 0.857258987426758
+  - 0.261378002166748

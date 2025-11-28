@@ -173,6 +173,11 @@ class ServiceNode(Node):
             '/environment_context',
             self.environment_context_callback, 10
         )
+        self.create_subscription(
+            String,
+            '/initial_location',
+            self.initial_location_callback, 10
+        )
         
         # Publishers
         self.target_pub = self.create_publisher(RectDepth, 'task/rect_depth', 10)
@@ -183,6 +188,18 @@ class ServiceNode(Node):
         self.update_memory_map = self.create_timer(1.0, self.update_map)
         self.camera2map_monitor_timer = self.create_timer(2.0, self.monitor_camera2map_topic)
         self.command_processor_timer = self.create_timer(0.5, self.process_command_queue)
+        # Dedicated timer for GUI updates (30 Hz) to keep window responsive
+        self.display_timer = self.create_timer(0.033, self.update_display)
+
+    def update_display(self):
+        """Handle GUI updates independent of camera rate"""
+        if self.rgb_image is not None:
+            try:
+                # Show image
+                cv2.imshow("Robot Camera View", self.rgb_image)
+                cv2.waitKey(1)
+            except Exception as e:
+                self.get_logger().warn(f"Display error: {e}")
 
     def suppress_background_logging(self, suppress=True):
         """Enable or disable background activity logging"""
@@ -200,12 +217,6 @@ class ServiceNode(Node):
         """Handle RGB image messages"""
         try:
             self.rgb_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            
-            # Display raw image
-            if self.rgb_image is not None:
-                cv2.imshow("Robot Camera View", self.rgb_image)
-                cv2.waitKey(1)
-                
             self.update_flag = 1
         except Exception as e:
             self.get_logger().error(f"Error processing RGB image: {e}")
@@ -263,6 +274,14 @@ class ServiceNode(Node):
             self.environment_context = context
             self.get_logger().info(f"🌍 Environment context updated: {context}")
             self._publish_status(f"✅ Environment set to: {context}")
+    
+    def initial_location_callback(self, msg):
+        """Handle initial location updates from GUI - sets the robot's current room in the graph"""
+        location = msg.data.strip()
+        if location:
+            self.memory_builder.last_room_type = location
+            self.get_logger().info(f"📍 Robot initial location set to: {location}")
+            self._publish_status(f"📍 Robot is now in: {location}")
     
     def _publish_status(self, message: str):
         """Publish status message to GUI"""
@@ -372,12 +391,14 @@ class ServiceNode(Node):
         if rect is None:
             # STRICT RULE: If object not visible, assume route is blocked
             self.get_logger().warn(f"🚫 Object '{obj}' not detected in camera view")
-            self._publish_status(f"❌ Cannot see '{obj}' - assuming direct route is BLOCKED")
-            self._publish_status(f"🔄 Activating motion planner to bypass blockage...")
+            self._publish_status(f"❌ Vision failed: Cannot see '{obj}'")
+            self._publish_status(f"🤔 Analysis: Direct route assumed BLOCKED by obstacle")
+            self._publish_status(f"🧠 Strategy: Switching to memory-based navigation...")
             
             # Try using motion planner to find alternative route through memory.yaml
             if self.motion_planner:
                 self.get_logger().info(f"🗺️ Planning alternative route to '{obj}' using memory.yaml")
+                self._publish_status(f"🗺️ Querying memory map for alternative path to '{obj}'...")
                 
                 # Force motion planner to find path
                 success = self._navigate_with_motion_planner(obj, relation)
@@ -389,13 +410,13 @@ class ServiceNode(Node):
                         self.memory_builder.last_room_type = room_name
                         self.get_logger().info(f"📍 Location updated to: {room_name}")
                     
-                    self._publish_status(f"✅ Alternative route found and goal sent!")
+                    self._publish_status(f"✅ Success: Found and initiated alternative route via memory!")
                     return True
                 else:
-                    self._publish_status(f"❌ No alternative route found in memory map")
+                    self._publish_status(f"❌ Failure: Memory search yielded no valid path to '{obj}'")
                     return False
             else:
-                self._publish_status(f"❌ Motion planner unavailable - cannot find alternative route")
+                self._publish_status(f"❌ Critical: Motion planner unavailable - cannot reroute")
                 return False
         
         dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
@@ -668,6 +689,10 @@ class ServiceNode(Node):
         
         self.get_logger().info(f"🗺️ Motion planner activated for '{obj_name}'")
         self._publish_status(f"🗺️ Using memory.yaml to navigate to '{obj_name}'...")
+        
+        # SAFETY: Rebuild graph to ensure edges are up to date
+        self.motion_planner.build_graph()
+        
         if retry_count > 0:
             self.get_logger().info(f"🔄 Replanning attempt #{retry_count}")
             self._publish_status(f"🔄 Attempt #{retry_count} to find alternative route...")
@@ -684,6 +709,7 @@ class ServiceNode(Node):
             return False
         
         self.get_logger().info(f"✅ Found '{obj_name}' in room '{room_name}' at {coords}")
+        self._publish_status(f"📍 Target identified: '{obj_name}' is in '{room_name}'")
         
         # Determine current location
         if self.memory_builder.last_room_type:
@@ -691,6 +717,7 @@ class ServiceNode(Node):
         else:
             # Try to infer from camera pose or use default
             current_location = "home gym"
+            self._publish_status(f"⚠️ Unknown start location, assuming '{current_location}'")
         
         self.get_logger().info(f"📍 Current location: {current_location}")
         
@@ -704,14 +731,16 @@ class ServiceNode(Node):
         self.get_logger().info(f"🎯 Target: {obj_name} in room '{room_name}'")
         
         # Plan path using motion planner
+        self._publish_status(f"🧠 Calculating path from '{current_location}' to '{room_name}'...")
         path = self.motion_planner.plan_path(current_location, room_name)
         
         if not path or len(path) == 0:
             self.get_logger().warn(f"⚠️ No path found from '{current_location}' to '{room_name}'")
+            self._publish_status(f"❌ No valid path found between '{current_location}' and '{room_name}'")
             return False
         
         self.get_logger().info(f"🛤️ Planned path: {' -> '.join(path)}")
-        self._publish_status(f"🗺️ Route: {' → '.join(path)}")
+        self._publish_status(f"✅ Path found: {' → '.join(path)}")
         self.current_path = path
         
         # Navigate through the path (skip first node if it's current location)
@@ -727,7 +756,7 @@ class ServiceNode(Node):
             # Check if this is a room node
             if node.node_type.value == "room":
                 self.get_logger().info(f"🚶 Navigating to waypoint: {waypoint}")
-                self._publish_status(f"🚶 Going to: {waypoint}")
+                self._publish_status(f"🚶 Moving to waypoint {i}/{len(path)-1}: {waypoint}")
                 self.current_path_index = i
                 
                 # Navigate to room using world coordinates from memory.yaml
@@ -746,8 +775,9 @@ class ServiceNode(Node):
                             self.get_logger().info(f"🔍 Identified blocked edge: {prev_waypoint} ↔ {waypoint}")
                             
                             # Remove the blocked edge and replan
-                            self._publish_status(f"🚧 Path blocked: {prev_waypoint} ↔ {waypoint}")
-                            self._publish_status(f"🔄 Searching for alternative route...")
+                            self._publish_status(f"🚧 Obstacle detected: Path blocked between {prev_waypoint} and {waypoint}")
+                            self._publish_status(f"🚫 Marking edge as impassable in memory map")
+                            self._publish_status(f"🔄 Recalculating optimal path to '{obj_name}'...")
                             
                             # Trigger replanning with edge removal
                             new_path = self.motion_planner.replan_after_edge_removal(
@@ -757,28 +787,29 @@ class ServiceNode(Node):
                             if new_path:
                                 # Recursive call with new path
                                 self.get_logger().info("✅ Alternative route found! Retrying...")
-                                self._publish_status(f"✅ Found new route: {' → '.join(new_path)}")
+                                self._publish_status(f"✅ New strategy: Route via {' → '.join(new_path)}")
                                 time.sleep(2)
                                 # Reset robot state for retry
                                 self.robot_state = "navigating"
                                 return self._navigate_with_motion_planner(obj_name, relation, retry_count + 1, prev_waypoint)
                             else:
                                 self.get_logger().error("❌ No alternative path exists")
-                                self._publish_status("❌ No alternative path available")
+                                self._publish_status("❌ Failure: All potential routes to target are blocked")
                                 return False
                         else:
                             self.get_logger().error("❌ Failed at first waypoint")
+                            self._publish_status("❌ Failed to leave starting location")
                             return False
                     else:
                         # Success - update current location
                         self.memory_builder.last_room_type = waypoint
                         self.get_logger().info(f"✅ Reached: {waypoint}")
-                        self._publish_status(f"✅ Reached: {waypoint}")
+                        self._publish_status(f"✅ Arrived at waypoint: {waypoint}")
                         time.sleep(1)
         
         # Now try to detect the object directly since we're in the right room
         self.get_logger().info(f"✅ Arrived at room '{room_name}'. Attempting to detect '{obj_name}'...")
-        self._publish_status(f"✅ Reached {room_name}, searching for {obj_name}...")
+        self._publish_status(f"✅ Arrived at '{room_name}' - Scanning for '{obj_name}'...")
         time.sleep(2)  # Wait for camera to stabilize
         
         # Try to detect the object now
@@ -786,7 +817,8 @@ class ServiceNode(Node):
         
         if rect is not None:
             self.get_logger().info(f"✅ Object '{obj_name}' now visible! Navigating to it...")
-            self._publish_status(f"👀 Found {obj_name}! Navigating...")
+            self._publish_status(f"👀 Visual Confirmation: '{obj_name}' DETECTED!")
+            self._publish_status(f"🎯 Final Approach: Navigating to object...")
             dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
             
             if dis and dis > 0:
@@ -821,12 +853,13 @@ class ServiceNode(Node):
                 return goal_published
             else:
                 self.get_logger().error(f"❌ Cannot compute distance to '{obj_name}'")
-                self._publish_status(f"❌ Cannot compute distance to '{obj_name}'")
+                self._publish_status(f"❌ Failure: Could not calculate distance to object")
                 return False
         else:
             # If still not visible, navigate to stored coordinates
             self.get_logger().warn(f"⚠️ Object '{obj_name}' still not visible after reaching room")
-            self._publish_status(f"⚠️ '{obj_name}' not visible, using stored coordinates...")
+            self._publish_status(f"⚠️ Warning: '{obj_name}' not visible in room")
+            self._publish_status(f"🗺️ Strategy: Falling back to stored coordinates in memory")
             
             if len(coords) >= 2:
                 # Navigate to stored world coordinates
@@ -864,17 +897,17 @@ class ServiceNode(Node):
                     return goal_published
                 else:
                     self.get_logger().error(f"❌ Camera pose not available for '{obj_name}'")
-                    self._publish_status(f"❌ Cannot navigate - camera pose unavailable")
+                    self._publish_status(f"❌ Failure: Cannot execute fallback (no camera pose)")
                     return False
             else:
                 self.get_logger().error(f"❌ No coordinates available for '{obj_name}'")
-                self._publish_status(f"❌ No coordinates found for '{obj_name}' in memory")
+                self._publish_status(f"❌ Failure: No fallback coordinates in memory")
                 return False
         
         # Should never reach here - no goal was published
         if not goal_published:
             self.get_logger().error(f"❌ CRITICAL: Motion planner did NOT publish navigation goal for '{obj_name}'")
-            self._publish_status(f"❌ Failed to create navigation goal for '{obj_name}'")
+            self._publish_status(f"❌ Critical Error: Navigation sequence failed unexpectedly")
         return False
     
     # ============================================================================
@@ -1003,7 +1036,8 @@ class ServiceNode(Node):
             self.robot_state = "reachGoal"
             
         except Exception as e:
-            self._publish_status(f"❌ Error: {str(e)}")
+            self._publish_status(f"❌ System Error: {str(e)}")
+            self._publish_status(f"⚠️ Please check logs for details.")
             self.get_logger().error(f"Error processing command: {e}")
         finally:
             self.processing_command = False

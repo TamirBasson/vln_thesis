@@ -136,9 +136,38 @@ class DStarLitePlanner:
         return base_distance + penalty
     
     def build_graph(self):
-        """Build the graph with edges between all nodes"""
+        """Build the graph using edges from memory.yaml"""
+        # First, load edges from memory.yaml if available
+        try:
+            with open(self.memory_file, 'r') as file:
+                data = yaml.safe_load(file)
+                
+            if 'edges' in data and data['edges']:
+                print(f"Loading {len(data['edges'])} edges from memory.yaml")
+                for edge_data in data.get('edges', []):
+                    from_node = edge_data.get('from', '')
+                    to_node = edge_data.get('to', '')
+                    cost = edge_data.get('cost', 1.0)
+                    
+                    # Verify nodes exist
+                    if from_node in self.nodes and to_node in self.nodes:
+                        # Add bidirectional edges
+                        self.edges[(from_node, to_node)] = cost
+                        self.edges[(to_node, from_node)] = cost
+                    else:
+                        # Handle case where node names might differ slightly or be objects
+                        # For now, we skip if strict match fails, but we could try fuzzy match
+                        pass
+                
+                print(f"Graph built with {len(self.edges)} directed edges")
+                return
+                
+        except Exception as e:
+            print(f"Warning: Could not load edges from memory file: {e}")
+            
+        # Fallback: Create edges between all nodes (fully connected)
+        print("Fallback: Building fully connected graph")
         node_ids = list(self.nodes.keys())
-        
         for i, node1_id in enumerate(node_ids):
             for j, node2_id in enumerate(node_ids):
                 if i != j:
@@ -174,7 +203,8 @@ class DStarLitePlanner:
     
     def update_vertex(self, node_id: str):
         """Update vertex in D* Lite algorithm"""
-        if node_id != self.start_node:
+        # CRITICAL: Don't update the goal node's rhs - it must stay at 0
+        if node_id != self.goal_node:
             min_rhs = float('inf')
             for neighbor in self.get_neighbors(node_id):
                 if neighbor in self.g:
@@ -196,7 +226,7 @@ class DStarLitePlanner:
             
         while self.queue and (
             self.queue[0][:2] < self.calculate_key(self.start_node) or
-            self.rhs.get(self.start_node, float('inf')) > self.g.get(self.start_node, float('inf'))
+            self.rhs.get(self.start_node, float('inf')) != self.g.get(self.start_node, float('inf'))
         ):
             k_old = self.queue[0][:2]
             u = heapq.heappop(self.queue)[2]
@@ -236,14 +266,22 @@ class DStarLitePlanner:
         self.goal_node = goal_node_id
         
         # Initialize D* Lite
-        self.rhs = {goal_node_id: 0.0}
-        self.g = {goal_node_id: float('inf')}
+        self.rhs = {}
+        self.g = {}
         self.queue = []
         self.km = 0.0
         
-        # Build graph if not already built
-        if not self.edges:
-            self.build_graph()
+        # Always rebuild graph to ensure fresh edges
+        self.edges = {}
+        self.build_graph()
+        
+        # Initialize all nodes with infinite cost
+        for node_id in self.nodes:
+            self.g[node_id] = float('inf')
+            self.rhs[node_id] = float('inf')
+        
+        # Set goal cost to 0
+        self.rhs[goal_node_id] = 0.0
         
         # Initialize goal node
         self.update_vertex(goal_node_id)
@@ -253,6 +291,8 @@ class DStarLitePlanner:
         
         # Extract path
         path = self.extract_path()
+        if path:
+            print(f"🛤️ Path found: {' -> '.join(path)}")
         return path
     
     def find_node_by_name(self, location_name: str) -> Optional[str]:
@@ -302,6 +342,111 @@ class DStarLitePlanner:
             current = best_neighbor
         
         return path
+
+    def remove_edge(self, from_node: str, to_node: str) -> bool:
+        """
+        Remove an edge from the graph (bidirectional removal)
+        
+        Args:
+            from_node: Source node name
+            to_node: Destination node name
+            
+        Returns:
+            bool: True if edge was removed successfully
+        """
+        removed = False
+        
+        # Remove edge in both directions
+        if (from_node, to_node) in self.edges:
+            del self.edges[(from_node, to_node)]
+            removed = True
+            print(f"Removed edge: {from_node} -> {to_node}")
+        
+        if (to_node, from_node) in self.edges:
+            del self.edges[(to_node, from_node)]
+            removed = True
+            print(f"Removed edge: {to_node} -> {from_node}")
+        
+        return removed
+    
+    def remove_edge_from_yaml(self, from_node: str, to_node: str) -> bool:
+        """
+        Remove an edge from memory.yaml file
+        
+        Args:
+            from_node: Source node name
+            to_node: Destination node name
+            
+        Returns:
+            bool: True if edge was removed from file successfully
+        """
+        try:
+            with open(self.memory_file, 'r') as file:
+                data = yaml.safe_load(file)
+            
+            if 'edges' not in data:
+                return False
+            
+            original_count = len(data['edges'])
+            
+            # Remove the edge (check both directions)
+            data['edges'] = [
+                edge for edge in data['edges']
+                if not ((edge.get('from') == from_node and edge.get('to') == to_node) or
+                       (edge.get('from') == to_node and edge.get('to') == from_node))
+            ]
+            
+            removed_count = original_count - len(data['edges'])
+            
+            if removed_count > 0:
+                # Write back to file
+                with open(self.memory_file, 'w') as file:
+                    yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+                
+                print(f"✅ Removed {removed_count} edge(s) from {self.memory_file}")
+                print(f"   Blocked connection: {from_node} ↔ {to_node}")
+                return True
+            else:
+                print(f"⚠️ Edge {from_node} ↔ {to_node} not found in memory.yaml")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error removing edge from memory.yaml: {e}")
+            return False
+    
+    def replan_after_edge_removal(self, start_location: str, goal_location: str, 
+                                  blocked_from: str, blocked_to: str) -> List[str]:
+        """
+        Remove a blocked edge and replan the path
+        
+        Args:
+            start_location: Current location
+            goal_location: Goal location
+            blocked_from: Start node of blocked edge
+            blocked_to: End node of blocked edge
+            
+        Returns:
+            List[str]: New path avoiding the blocked edge
+        """
+        print(f"\n🚫 Detected blocked path: {blocked_from} ↔ {blocked_to}")
+        print(f"🔄 Removing edge and replanning...")
+        
+        # Remove from memory graph
+        self.remove_edge(blocked_from, blocked_to)
+        
+        # Remove from YAML file
+        self.remove_edge_from_yaml(blocked_from, blocked_to)
+        
+        # Replan with updated graph
+        print(f"\n🗺️ Searching for alternative route...")
+        new_path = self.plan_path(start_location, goal_location)
+        
+        if new_path:
+            print(f"✅ Found alternative path: {' -> '.join(new_path)}")
+        else:
+            print(f"❌ No alternative path found from {start_location} to {goal_location}")
+        
+        return new_path
     
     def get_path_cost(self, path: List[str]) -> float:
         """Calculate total cost of a path"""

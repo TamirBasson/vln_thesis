@@ -1,46 +1,34 @@
 edges:
+- cost: 0.77
+  from: dining room
+  to: kitchen
 - cost: 5.94
   from: dining room
   to: bedroom1
 - cost: 1.59
   from: dining room
   to: entrance hall
-- cost: 0.41
+- cost: 5.98
   from: kitchen
-  to: office
-- cost: 2.09
-  from: kitchen
-  to: bedroom
-- cost: 5.22
+  to: bedroom1
+- cost: 6.73
+  from: living room
+  to: bedroom1
+- cost: 5.57
   from: living room
   to: entrance hall
-- cost: 1.05
+- cost: 2.71
   from: living room
   to: home gym
-- cost: 2.23
+- cost: 1.48
   from: living room
   to: home gym
-- cost: 0.21
+- cost: 5.09
+  from: living room
+  to: bedroom2
+- cost: 0.82
   from: living room
   to: gym
-- cost: 0.0
-  from: living room
-  to: playroom
-- cost: 0.43
-  from: living room
-  to: fitness room
-- cost: 0.0
-  from: living room
-  to: hallway
-- cost: 0.0
-  from: living room
-  to: waiting area
-- cost: 0.22
-  from: living room
-  to: recreation room
-- cost: 0.22
-  from: living room
-  to: exercise room
 - cost: 5.18
   from: bedroom1
   to: entrance hall
@@ -50,150 +38,21 @@ edges:
 - cost: 7.1
   from: bedroom1
   to: bedroom2
-- cost: 7.12
-  from: bedroom1
-  to: fitness room
-- cost: 8.21
-  from: bedroom1
-  to: office
-- cost: 6.7
-  from: bedroom1
-  to: bedroom
-- cost: 4.46
+- cost: 5.27
   from: entrance hall
+  to: gym
+- cost: 1.41
+  from: home gym
   to: home gym
-- cost: 5.42
-  from: entrance hall
-  to: gym
-- cost: 5.21
-  from: entrance hall
-  to: playroom
-- cost: 5.53
-  from: entrance hall
-  to: fitness room
-- cost: 5.22
-  from: entrance hall
-  to: hallway
-- cost: 5.22
-  from: entrance hall
-  to: waiting area
-- cost: 5.43
-  from: entrance hall
-  to: recreation room
-- cost: 5.43
-  from: entrance hall
-  to: exercise room
-- cost: 1.19
+- cost: 4.48
+  from: home gym
+  to: bedroom2
+- cost: 3.12
   from: home gym
   to: gym
-- cost: 1.05
+- cost: 4.1
   from: home gym
-  to: playroom
-- cost: 1.05
-  from: home gym
-  to: hallway
-- cost: 1.05
-  from: home gym
-  to: waiting area
-- cost: 1.19
-  from: home gym
-  to: recreation room
-- cost: 1.19
-  from: home gym
-  to: exercise room
-- cost: 2.13
-  from: home gym
-  to: gym
-- cost: 2.24
-  from: home gym
-  to: playroom
-- cost: 1.8
-  from: home gym
-  to: fitness room
-- cost: 0.85
-  from: home gym
-  to: office
-- cost: 2.23
-  from: home gym
-  to: hallway
-- cost: 1.75
-  from: home gym
-  to: bedroom
-- cost: 2.24
-  from: home gym
-  to: waiting area
-- cost: 2.13
-  from: home gym
-  to: recreation room
-- cost: 2.13
-  from: home gym
-  to: exercise room
-- cost: 2.41
-  from: bedroom2
-  to: bedroom
-- cost: 0.22
-  from: gym
-  to: playroom
-- cost: 0.38
-  from: gym
-  to: fitness room
-- cost: 0.22
-  from: gym
-  to: hallway
-- cost: 0.21
-  from: gym
-  to: waiting area
-- cost: 0.01
-  from: gym
-  to: recreation room
-- cost: 0.01
-  from: gym
-  to: exercise room
-- cost: 0.44
-  from: playroom
-  to: fitness room
-- cost: 0.0
-  from: playroom
-  to: hallway
-- cost: 0.01
-  from: playroom
-  to: waiting area
-- cost: 0.22
-  from: playroom
-  to: recreation room
-- cost: 0.22
-  from: playroom
-  to: exercise room
-- cost: 0.43
-  from: fitness room
-  to: hallway
-- cost: 0.44
-  from: fitness room
-  to: waiting area
-- cost: 0.38
-  from: fitness room
-  to: recreation room
-- cost: 0.38
-  from: fitness room
-  to: exercise room
-- cost: 1.98
-  from: office
-  to: bedroom
-- cost: 0.22
-  from: hallway
-  to: recreation room
-- cost: 0.22
-  from: hallway
-  to: exercise room
-- cost: 0.22
-  from: waiting area
-  to: recreation room
-- cost: 0.22
-  from: waiting area
-  to: exercise room
-- cost: 0.01
-  from: recreation room
-  to: exercise room
+  to: bedroom2
 nodes:
 - features:
   - Coordinate relative to the camera frame:
@@ -229,46 +88,11 @@ nodes:
     confidence: 0.8073176145553589
     depth: 2.97
     object: person
-  - Coordinate relative to the camera frame:
-    - 3.4270529747009277
-    - 0.5320490875738397
-    Coordinate relative to the world frame:
-    - 0.5647238386272403
-    - -2.5152356385378667
-    object: refrigerator
-  - Coordinate relative to the camera frame:
-    - 3.522547721862793
-    - 0.9114577039358245
-    Coordinate relative to the world frame:
-    - 0.797291997786443
-    - -2.8300772187849854
-    object: kitchen appliance
-  - Coordinate relative to the camera frame:
-    - 3.0861549377441406
-    - 1.2954113760991428
-    Coordinate relative to the world frame:
-    - 1.3698828475451854
-    - -2.730083203108612
-    object: door
-  - Coordinate relative to the camera frame:
-    - 1.3140615224838257
-    - 0.002518613720404465
-    Coordinate relative to the world frame:
-    - -2.0493709217260605
-    - -0.5739439136111271
-    object: countertop
-  - Coordinate relative to the camera frame:
-    - 1.314069151878357
-    - 0.0025186283433862784
-    Coordinate relative to the world frame:
-    - -2.049373936168311
-    - -0.5739369049726958
-    object: floor
   name: kitchen
   pose:
-  - -1.530173420906067
-  - -1.7810884714126587
-  - 1.9750653505325317
+  - 5.515822887420654
+  - 5.989790916442871
+  - -0.6477218270301819
 - features:
   - Coordinate relative to the camera frame:
     - 2.82
@@ -289,45 +113,31 @@ nodes:
     depth: 2.303
     object: chair
   - Coordinate relative to the camera frame:
-    - 1.6948537826538086
-    - 0.0032484643359792396
+    - 3.0116286277770996
+    - -0.975515080488998
     Coordinate relative to the world frame:
-    - 0.17811212133313167
-    - -1.4305477749075723
-    object: table
+    - 3.502296583755141
+    - -0.9750983004623958
+    object: TV stand
   - Coordinate relative to the camera frame:
-    - 3.5225915908813477
-    - 0.9114690550254569
+    - 3.0115807056427
+    - -0.975499557736835
     Coordinate relative to the world frame:
-    - 0.797660831757421
-    - -2.8265245648100614
-    object: cabinet
+    - 3.5018355441738094
+    - -0.9752049305452598
+    object: tv stand
   - Coordinate relative to the camera frame:
-    - 2.8427438735961914
-    - -1.5964349196221952
+    - 3.011518955230713
+    - -0.9754795557825554
     Coordinate relative to the world frame:
-    - -0.7323872022304592
-    - -0.7263511723395369
-    object: door
-  - Coordinate relative to the camera frame:
-    - 2.3570966720581055
-    - -0.6957352081438039
-    Coordinate relative to the world frame:
-    - -1.0417058000718928
-    - -0.29806178855147814
-    object: screened doors
-  - Coordinate relative to the camera frame:
-    - 2.550954818725586
-    - -0.8898565895044593
-    Coordinate relative to the world frame:
-    - -1.0291638576006967
-    - -0.3113078770255978
-    object: sliding doors
+    - 3.5018443806431208
+    - -0.9755808110215197
+    object: ' TV stand'
   name: living room
   pose:
-  - 1.394829273223877
-  - -0.234420046210289
-  - -2.332430601119995
+  - 0.4915311336517334
+  - -0.00696153286844492
+  - 0.0007643889985047281
 - features: []
   name: bedroom1
   pose:
@@ -342,31 +152,52 @@ nodes:
   - -1.2206203937530518
 - features:
   - Coordinate relative to the camera frame:
-    - 3.4256231784820557
-    - 1.1818380268462645
+    - 3.5377700328826904
+    - 1.0984757644171346
     Coordinate relative to the world frame:
-    - -1.8908074621411433
-    - -2.5553363063529693
-    object: weights
-  - Coordinate relative to the camera frame:
-    - 1.841076135635376
-    - -0.5293085068143258
-    Coordinate relative to the world frame:
-    - -0.9443487722027061
-    - -0.4238983553694492
-    object: cabinet
-  - Coordinate relative to the camera frame:
-    - 3.3963980674743652
-    - 1.2433626535968179
-    Coordinate relative to the world frame:
-    - -1.8420430934400764
-    - -2.602419126135457
+    - -1.8390345731008915
+    - -2.6056276014545525
     object: exercise ball
+  - Coordinate relative to the camera frame:
+    - 3.662593126296997
+    - 1.439091484055055
+    Coordinate relative to the world frame:
+    - -1.8317360553873545
+    - -2.96832114255111
+    object: weight rack
+  - Coordinate relative to the camera frame:
+    - 1.904508113861084
+    - -0.5876984826381617
+    Coordinate relative to the world frame:
+    - -0.9290442069819316
+    - -0.44168545316839314
+    object: mirror
+  - Coordinate relative to the camera frame:
+    - 3.5560824871063232
+    - 1.0496352647187752
+    Coordinate relative to the world frame:
+    - -1.8746197773327289
+    - -2.5675202556550922
+    object: weight bench
+  - Coordinate relative to the camera frame:
+    - 0.764207124710083
+    - -0.06151857100821
+    Coordinate relative to the world frame:
+    - -1.848167503622862
+    - -2.5856269233572005
+    object: dumbbell rack
+  - Coordinate relative to the camera frame:
+    - 3.3608763217926025
+    - 1.9002923197930344
+    Coordinate relative to the world frame:
+    - -2.88462482326531
+    - -5.60089809960788
+    object: weights
   name: home gym
   pose:
-  - 2.391942262649536
-  - 0.10365751385688782
-  - -2.4220030307769775
+  - -1.1877515316009521
+  - -2.135296106338501
+  - -2.42986798286438
 - features: []
   name: home gym
   pose:
@@ -376,11 +207,11 @@ nodes:
 - features:
   - Coordinate relative to the camera frame:
     - 1.0
-    - -0.4
+    - 0.0
     Coordinate relative to the world frame:
-    - -4.207
-    - 0.5576
-    confidence: 0.85
+    - -4.28
+    - 1.47
+    confidence: 0.9
     depth: 1.0
     object: bed
   name: bedroom2
@@ -388,281 +219,9 @@ nodes:
   - -4.523774272203445
   - 0.857258987426758
   - 0.261378002166748
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.9050636291503906
-    - -0.7110458173981046
-    Coordinate relative to the world frame:
-    - -1.8481760236095726
-    - -2.5797530278045877
-    object: gym ball
-  - Coordinate relative to the camera frame:
-    - 3.905100107192993
-    - -0.7110524594306251
-    Coordinate relative to the world frame:
-    - -1.8463012567235721
-    - -2.576559710297085
-    object: fitness ball
-  - Coordinate relative to the camera frame:
-    - 0.7662215828895569
-    - 0.06168073462138496
-    Coordinate relative to the world frame:
-    - -1.6048502497684507
-    - -2.4275820912815926
-    object: exercise equipment
-  - Coordinate relative to the camera frame:
-    - 0.7660809755325317
-    - 0.06166941574800922
-    Coordinate relative to the world frame:
-    - -1.604740440131126
-    - -2.4274935453088173
-    object: dumbbell
-  - Coordinate relative to the camera frame:
-    - 0.7770878672599792
-    - 0.025320070808102977
-    Coordinate relative to the world frame:
-    - -1.843582508969734
-    - -2.5895871698282926
-    object: exercise ball
-  - Coordinate relative to the camera frame:
-    - 0.7775474190711975
-    - 0.0059611869442342735
-    Coordinate relative to the world frame:
-    - -1.8424102857582667
-    - -2.5965373438793873
-    object: barbell
-  - Coordinate relative to the camera frame:
-    - 3.4658396244049072
-    - -1.129284195478273
-    Coordinate relative to the world frame:
-    - -1.842649871947259
-    - -2.6034556698138154
-    object: exercise bench
-  - Coordinate relative to the camera frame:
-    - 3.464705467224121
-    - -1.128914649879443
-    Coordinate relative to the world frame:
-    - -1.8458058550348873
-    - -2.6026023019235804
-    object: bench press
-  - Coordinate relative to the camera frame:
-    - 3.464705467224121
-    - -1.128914649879443
-    Coordinate relative to the world frame:
-    - -1.8458058550348873
-    - -2.6026023019235804
-    object: weights
-  - Coordinate relative to the camera frame:
-    - 3.466062068939209
-    - -1.129356675201567
-    Coordinate relative to the world frame:
-    - -1.842094407317774
-    - -2.604950170201949
-    object: weight bench
-  - Coordinate relative to the camera frame:
-    - 3.463167905807495
-    - -1.135051389376091
-    Coordinate relative to the world frame:
-    - -1.8453421724784294
-    - -2.598890102636082
-    object: bench
-  - Coordinate relative to the camera frame:
-    - 0.6188668608665466
-    - -0.10912667458834341
-    Coordinate relative to the world frame:
-    - -1.709732508852876
-    - -2.475322073207346
-    object: weight plate
-  - Coordinate relative to the camera frame:
-    - 3.3654823303222656
-    - -0.799861634070535
-    Coordinate relative to the world frame:
-    - -1.850060977960076
-    - -2.5963532765618353
-    object: blue ball
-  - Coordinate relative to the camera frame:
-    - 0.6538946032524109
-    - -0.0012532959007406197
-    Coordinate relative to the world frame:
-    - -1.567377283058539
-    - -2.3930180557985072
-    object: exercise mat
-  - Coordinate relative to the camera frame:
-    - 0.7664147615432739
-    - 0.0807927547914288
-    Coordinate relative to the world frame:
-    - -1.8482356964643036
-    - -2.594042707162712
-    object: yoga mat
-  - Coordinate relative to the camera frame:
-    - 3.7053239345550537
-    - -0.9942602653384972
-    Coordinate relative to the world frame:
-    - -1.845178860266723
-    - -2.596017336287585
-    object: ball
+- features: []
   name: gym
   pose:
-  - 1.3346325159072876
-  - -0.4385468661785126
-  - -2.282334804534912
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.905151605606079
-    - -0.7110618364177128
-    Coordinate relative to the world frame:
-    - -1.8495060158218362
-    - -2.581783009981373
-    object: ball
-  name: playroom
-  pose:
-  - 1.3969683647155762
-  - -0.2311071753501892
-  - -2.3323633670806885
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.396317958831787
-    - 1.2433333272067915
-    Coordinate relative to the world frame:
-    - -1.8402900696437268
-    - -2.603978854323155
-    object: exercise ball
-  - Coordinate relative to the camera frame:
-    - 1.8409388065338135
-    - -0.5292690247634301
-    Coordinate relative to the world frame:
-    - -0.9414867142782094
-    - -0.42373209443628124
-    object: mirror
-  name: fitness room
-  pose:
-  - 0.9717015027999878
-  - -0.3294334411621094
-  - -2.812394380569458
-- features:
-  - Coordinate relative to the camera frame:
-    - 1.036532998085022
-    - 0.0019866849351880666
-    Coordinate relative to the world frame:
-    - -1.586292180455635
-    - -0.5324452923688457
-    object: desk
-  - Coordinate relative to the camera frame:
-    - 2.759035110473633
-    - 0.3437292179644768
-    Coordinate relative to the world frame:
-    - -3.744472320290707
-    - 2.156448355121006
-    object: filing cabinet
-  - Coordinate relative to the camera frame:
-    - 1.3500040769577026
-    - -0.4579881197943676
-    Coordinate relative to the world frame:
-    - -1.2135633494760412
-    - -0.0887824722943287
-    object: glass door
-  name: office
-  pose:
-  - -1.220395565032959
-  - -1.514341115951538
-  - 1.8930692672729492
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.0849223136901855
-    - 1.294893983014817
-    Coordinate relative to the world frame:
-    - 1.3733535389543072
-    - -2.726000953518131
-    object: door
-  - Coordinate relative to the camera frame:
-    - 2.8547158241271973
-    - -1.5484428608655592
-    Coordinate relative to the world frame:
-    - -0.7008022027604517
-    - -0.7675736776877945
-    object: wall
-  - Coordinate relative to the camera frame:
-    - 1.710944652557373
-    - 0.003279305118559767
-    Coordinate relative to the world frame:
-    - 1.2253061875488729
-    - -0.8460634356226873
-    object: floor
-  - Coordinate relative to the camera frame:
-    - 3.5228309631347656
-    - 0.9115309924927998
-    Coordinate relative to the world frame:
-    - 0.799309766436421
-    - -2.8261807745604544
-    object: laundry machine
-  - Coordinate relative to the camera frame:
-    - 1.6460238695144653
-    - -0.5931162791212471
-    Coordinate relative to the world frame:
-    - -1.3944100256862675
-    - 0.16381119053495904
-    object: partition
-  - Coordinate relative to the camera frame:
-    - 2.3563191890716553
-    - -0.6909894505461787
-    Coordinate relative to the world frame:
-    - -1.0368809013481861
-    - -0.30206534117660766
-    object: sliding doors
-  - Coordinate relative to the camera frame:
-    - 2.5460641384124756
-    - -0.8637508193717334
-    Coordinate relative to the world frame:
-    - -1.0175492820330276
-    - -0.33084094033355416
-    object: sliding door
-  name: hallway
-  pose:
-  - 1.3925379514694214
-  - -0.2314370721578598
-  - -2.332641363143921
-- features: []
-  name: bedroom
-  pose:
-  - -2.2058348655700684
-  - 0.1976410448551178
-  - 2.0730373859405518
-- features:
-  - Coordinate relative to the camera frame:
-    - 2.353907346725464
-    - -0.6767472342715137
-    Coordinate relative to the world frame:
-    - -1.0336259000936272
-    - -0.314163149451536
-    object: partition
-  name: waiting area
-  pose:
-  - 1.3991252183914185
-  - -0.2361234873533249
-  - -2.3324925899505615
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.705332040786743
-    - -0.9942624405070419
-    Coordinate relative to the world frame:
-    - -1.842523640774369
-    - -2.5987801949365594
-    object: ball
-  name: recreation room
-  pose:
-  - 1.3308354616165161
-  - -0.44289630651474
-  - -2.2826898097991943
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.7035577297210693
-    - -1.0008848083157718
-    Coordinate relative to the world frame:
-    - -1.8384080479772105
-    - -2.5956845206559174
-    object: blue ball
-  name: exercise room
-  pose:
-  - 1.3374457359313965
-  - -0.44346171617507935
-  - -2.282057523727417
+  - 1.2844703197479248
+  - -0.22454562783241272
+  - -2.1767027378082275
