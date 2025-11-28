@@ -17,10 +17,10 @@ class GroundingDINOInfer:
         self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(self.device)
         
         # Default thresholds (good for simulation)
-        self.box_threshold = 0.35
-        self.text_threshold = 0.35
+        self.box_threshold = 0.65
+        self.text_threshold = 0.65
         
-    def set_thresholds(self, box_threshold=0.35, text_threshold=0.35):
+    def set_thresholds(self, box_threshold=0.65, text_threshold=0.65):
         """Set detection thresholds. Lower values = more permissive detection"""
         self.box_threshold = box_threshold
         self.text_threshold = text_threshold
@@ -32,7 +32,7 @@ class GroundingDINOInfer:
         
     def set_simulation_mode(self):
         """Set thresholds optimized for simulation (more permissive)"""
-        self.set_thresholds(box_threshold=0.3, text_threshold=0.3)
+        self.set_thresholds(box_threshold=0.65, text_threshold=0.65)
 
     def infer(self, img, task):
         # image_resize= cv2.resize(img, (img.shape[1] // 2, img.shape[0] // 2))

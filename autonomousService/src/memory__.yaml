@@ -1,29 +1,55 @@
 edges:
-- cost: 6.2
-  from: living room
-  to: entrance hall
-- cost: 1.6
-  from: entrance hall
-  to: dining room
-- cost: 2.3
-  from: entrance hall
-  to: kitchen
 - cost: 0.77
   from: dining room
   to: kitchen
-- cost: 5.24
-  from: living room
+- cost: 5.94
+  from: dining room
   to: bedroom1
-- cost: 2.4
+- cost: 1.59
+  from: dining room
+  to: entrance hall
+- cost: 5.98
+  from: kitchen
+  to: bedroom1
+- cost: 4.42
+  from: living room
+  to: entrance hall
+- cost: 1.05
   from: living room
   to: home gym
-- cost: 2.4
+- cost: 1.05
+  from: living room
+  to: gym
+- cost: 5.18
+  from: bedroom1
+  to: entrance hall
+- cost: 7.46
+  from: bedroom1
+  to: home gym
+- cost: 7.1
+  from: bedroom1
+  to: bedroom2
+- cost: 5.45
+  from: entrance hall
+  to: home gym
+- cost: 5.45
+  from: entrance hall
+  to: gym
+- cost: 1.89
+  from: home gym
+  to: home gym
+- cost: 5.7
   from: home gym
   to: bedroom2
-- cost: 3.15
-  from: living room
+- cost: 0.0
+  from: home gym
+  to: gym
+- cost: 4.1
+  from: home gym
   to: bedroom2
-
+- cost: 1.89
+  from: home gym
+  to: gym
 nodes:
 - features:
   - Coordinate relative to the camera frame:
@@ -94,9 +120,9 @@ nodes:
     object: bed
   name: living room
   pose:
-  - -1.4468238353729248
-  - 1.5158894062042236
-  - -1.1936787366867065
+  - 1.7757316827774048
+  - 0.46944716572761536
+  - -2.1757595539093018
 - features:
   - Coordinate relative to the camera frame:
     - 1.981
@@ -116,14 +142,42 @@ nodes:
   name: entrance hall
   pose:
   - 4.134414529800415
-  - 4.2053980827331543
+  - 4.205398082733154
   - -1.2206203937530518
-- features: []
+- features:
+  - Coordinate relative to the camera frame:
+    - 3.5377700328826904
+    - 1.0984757644171346
+    Coordinate relative to the world frame:
+    - -1.8390345731008915
+    - -2.6056276014545525
+    object: exercise ball
+  - Coordinate relative to the camera frame:
+    - 3.662593126296997
+    - 1.439091484055055
+    Coordinate relative to the world frame:
+    - -1.8317360553873545
+    - -2.96832114255111
+    object: weight rack
+  - Coordinate relative to the camera frame:
+    - 1.904508113861084
+    - -0.5876984826381617
+    Coordinate relative to the world frame:
+    - -0.9290442069819316
+    - -0.44168545316839314
+    object: mirror
+  - Coordinate relative to the camera frame:
+    - 3.5560824871063232
+    - 1.0496352647187752
+    Coordinate relative to the world frame:
+    - -1.8746197773327289
+    - -2.5675202556550922
+    object: weight bench
   name: home gym
   pose:
-  - -0.6936394572257996
-  - -0.8234481811523438
-  - -2.2839951515197754
+  - 1.0578651428222656
+  - -0.29860222339630127
+  - -2.7700998783111572
 - features:
   - Coordinate relative to the camera frame:
     - 1.624
@@ -142,6 +196,33 @@ nodes:
 - features: []
   name: bedroom2
   pose:
-  - -4.52377427220344543
+  - -4.523774272203445
   - 0.857258987426758
   - 0.261378002166748
+- features:
+  - Coordinate relative to the camera frame:
+    - 0.764207124710083
+    - -0.06151857100821
+    Coordinate relative to the world frame:
+    - -1.848167503622862
+    - -2.5856269233572005
+    object: dumbbell rack
+  - Coordinate relative to the camera frame:
+    - 3.3608763217926025
+    - 1.9002923197930344
+    Coordinate relative to the world frame:
+    - -2.88462482326531
+    - -5.60089809960788
+    object: weights
+  - Coordinate relative to the camera frame:
+    - 3.5377414226531982
+    - 1.098466880955683
+    Coordinate relative to the world frame:
+    - -1.8368529096433042
+    - -2.6054432382820085
+    object: exercise ball
+  name: gym
+  pose:
+  - 1.0603216886520386
+  - -0.2970621585845947
+  - -2.769885778427124

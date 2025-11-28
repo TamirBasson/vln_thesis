@@ -23,7 +23,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'run_detect_node = detect_vl.run_detect:main',
             'start_service = detect_vl.start_service:main',
             'start_service.py = detect_vl.start_service:main',
             'ros_visualize_map = detect_vl.ros_visualize_map:main',

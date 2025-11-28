@@ -24,3 +24,7 @@ Please output the result using the following JSON structure:
         "center": [center_x, center_y]  
     }
 }
+
+
+
+go to the exercise ball, turn right and stop near the bed
