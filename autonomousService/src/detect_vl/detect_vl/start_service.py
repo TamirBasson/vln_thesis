@@ -481,6 +481,7 @@ class ServiceNode(Node):
 
     def _wait_for_goal_completion(self):
         """Wait for robot to reach the current goal"""
+        self._publish_status("⏳ Waiting for robot to reach goal...")
         print("Waiting for robot to reach goal...")
         timeout = 15.0  # 15 second timeout 
         start_time = time.time()
@@ -508,7 +509,7 @@ class ServiceNode(Node):
         
         if self.robot_state == "reachGoal":
             print("✅ Robot reached goal!")
-            self._publish_status("✅ Reached goal!")
+            self._publish_status("✅ Destination reached!")
             # Don't reset state here - let next goal set it
             return True
         elif self.robot_state == "failed":
@@ -663,6 +664,7 @@ class ServiceNode(Node):
             msg = self._create_navigation_message([], [], distance, cam_x, cam_y)
             self.target_pub.publish(msg)
             
+            self._publish_status(f"📍 Navigating to '{room_name}' (distance: {distance:.2f}m)")
             print(f"📍 Sent goal for room '{room_name}' at coordinates ({cam_x:.2f}, {cam_y:.2f}), distance: {distance:.2f}m")
             return True
         else:
