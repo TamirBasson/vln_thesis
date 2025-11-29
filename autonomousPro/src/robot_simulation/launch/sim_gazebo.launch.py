@@ -33,13 +33,13 @@ def generate_launch_description():
 
     declare_use_warehouse = DeclareLaunchArgument(
         name="use_warehouse",
-        default_value="true",
+        default_value="false",
         description="Use warehouse world (true) or small house world (false)"
     )
 
     declare_use_small_house = DeclareLaunchArgument(
         name="use_small_house",
-        default_value="false",
+        default_value="true",
         description="Use small house world (true) or other worlds (false)"
     )
 
