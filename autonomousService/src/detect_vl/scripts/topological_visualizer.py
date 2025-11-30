@@ -261,14 +261,25 @@ def draw_graph(
 # ===========================
 if __name__ == "__main__":
     import argparse, os
+    
+    # Default paths
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    DEFAULT_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
+    DEFAULT_YAML_PATH = os.path.join(SCRIPT_DIR, "..", "..", "memory.yaml")  # autonomousService/src/memory.yaml
+    
     parser = argparse.ArgumentParser(description="Render a semantic/topological graph from memory.yaml")
-    parser.add_argument("yaml_path", help="Path to YAML with keys: nodes[], edges[]")
+    parser.add_argument("yaml_path", nargs="?", default=DEFAULT_YAML_PATH, help=f"Path to YAML with keys: nodes[], edges[] (default: {DEFAULT_YAML_PATH})")
     parser.add_argument("--title", default="Topological Graph - Home Environment")
     parser.add_argument("--out", default=None, help="Output basename (no extension)")
+    parser.add_argument("--out-dir", default=DEFAULT_OUTPUT_DIR, help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})")
     args = parser.parse_args()
+
+    # Create output directory if it doesn't exist
+    os.makedirs(args.out_dir, exist_ok=True)
 
     raw = load_yaml(args.yaml_path)
     rooms = parse_rooms(raw)
     edges = parse_edges(raw)
     base = args.out or (os.path.splitext(os.path.basename(args.yaml_path))[0] + "_graph")
-    draw_graph(rooms, edges, title=args.title, out_png=base + ".png", out_svg=base + ".svg")
+    out_base = os.path.join(args.out_dir, base)
+    draw_graph(rooms, edges, title=args.title, out_png=out_base + ".png", out_svg=out_base + ".svg")

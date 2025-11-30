@@ -55,10 +55,7 @@ class RobotChatNode(Node):
         self.get_logger().info(f'Sent service question: "{question}"')
 
     def listener_callback(self, msg: String):
-        if "reached" in msg.data.lower():
-            self.last_status_msg = "🤖 Robot: ✅ Destination reached."
-        else:
-            self.last_status_msg = f"🤖 Robot: {msg.data}"
+        self.last_status_msg = f"🤖 Robot: {msg.data}"
 
 class RobotChatGUI(QWidget):
     def __init__(self, ros_node: RobotChatNode):
@@ -122,8 +119,8 @@ class RobotChatGUI(QWidget):
     def append_chat(self, sender_class: str, sender_name: str, text: str):
         safe_text = text.replace('<', '&lt;').replace('>', '&gt;')
         self.chat_html += f'<div class="{sender_class}"><span class="sender">{sender_name}</span>{safe_text}</div>'
-        self.chat_display.setHtml(self.chat_html + "</body></html>")
-        self.chat_display.page().runJavaScript("window.scrollTo(0, document.body.scrollHeight);")
+        scroll_script = "<script>window.scrollTo(0, document.body.scrollHeight);</script>"
+        self.chat_display.setHtml(self.chat_html + scroll_script + "</body></html>")
 
     def on_set_context(self):
         context = self.context_input.text().strip()

@@ -254,10 +254,7 @@ class ServiceNode(Node):
         self.robot_state = msg.data
         if not self.suppress_background_activity:
             self.get_logger().info(f"🤖 Robot state updated to: {self.robot_state}")
-        
-        # Publish status to GUI
-        if self.robot_state == "reachGoal":
-            self._publish_status("✅ Reached goal!")
+
     
     def gui_command_callback(self, msg):
         """Handle commands from GUI"""
@@ -391,7 +388,6 @@ class ServiceNode(Node):
         if rect is None:
             # STRICT RULE: If object not visible, assume route is blocked
             # CRITICAL: Set robot state to "failed" to trigger proper failure handling
-            self.robot_state = "failed"
             self.get_logger().warn(f"🚫 Object '{obj}' not detected in camera view - setting state to FAILED")
             
             self._publish_status(f"🔍 Scanning for '{obj}'...")
