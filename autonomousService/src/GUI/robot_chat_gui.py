@@ -33,9 +33,10 @@ class RobotChatNode(Node):
         self.location_pub = self.create_publisher(String, 'initial_location', 10)
         self.subscription = self.create_subscription(
             String, 'robot_status', self.listener_callback, 10)
-        self.last_status_msg = ""
+        # Use a queue to store ALL incoming messages (not just the last one)
+        self.status_queue = []
         self.get_logger().info("Robot ready for command.")
-        self.last_status_msg = "🤖 Robot: Ready for your command."
+        self.status_queue.append("🤖 Robot: Ready for your command.")
     
     def send_context(self, context: str):
         msg = String()
@@ -62,10 +63,8 @@ class RobotChatNode(Node):
         self.get_logger().info(f'Sent service question: "{question}"')
 
     def listener_callback(self, msg: String):
-        if "reached" in msg.data.lower():
-            self.last_status_msg = "🤖 Robot: ✅ Destination reached."
-        else:
-            self.last_status_msg = f"🤖 Robot: {msg.data}"
+        # Queue ALL messages so none are lost
+        self.status_queue.append(f"🤖 Robot: {msg.data}")
 
 class RobotChatGUI(QWidget):
     def __init__(self, ros_node: RobotChatNode):
@@ -177,11 +176,11 @@ class RobotChatGUI(QWidget):
         self.input_line.clear()
 
     def update_status(self):
-        status = self.ros_node.last_status_msg
-        if status:
+        # Process ALL queued messages
+        while self.ros_node.status_queue:
+            status = self.ros_node.status_queue.pop(0)
             display = status.replace("🤖 Robot: ", "")
             self.append_chat("robot", "🤖 Robot:", display)
-            self.ros_node.last_status_msg = ""
 
 
 def main(args=None):

@@ -390,15 +390,26 @@ class ServiceNode(Node):
 
         if rect is None:
             # STRICT RULE: If object not visible, assume route is blocked
-            self.get_logger().warn(f"🚫 Object '{obj}' not detected in camera view")
-            self._publish_status(f"❌ Vision failed: Cannot see '{obj}'")
-            self._publish_status(f"🤔 Analysis: Direct route assumed BLOCKED by obstacle")
-            self._publish_status(f"🧠 Strategy: Switching to memory-based navigation...")
+            # CRITICAL: Set robot state to "failed" to trigger proper failure handling
+            self.robot_state = "failed"
+            self.get_logger().warn(f"🚫 Object '{obj}' not detected in camera view - setting state to FAILED")
+            
+            self._publish_status(f"🔍 Scanning for '{obj}'...")
+            time.sleep(0.15)
+            self._publish_status(f"❌ Cannot locate '{obj}' - object not visible in camera view")
+            time.sleep(0.15)
+            self._publish_status(f"🚧 OBSTACLE DETECTED: Direct path to '{obj}' is blocked!")
+            time.sleep(0.15)
+            self._publish_status(f"🤔 Analysis: Cannot proceed - route obstructed")
+            time.sleep(0.15)
+            self._publish_status(f"🧠 Strategy: Activating memory-based navigation system...")
+            time.sleep(0.15)
+            self._publish_status(f"🗺️ Loading spatial memory map to find alternative route...")
             
             # Try using motion planner to find alternative route through memory.yaml
             if self.motion_planner:
                 self.get_logger().info(f"🗺️ Planning alternative route to '{obj}' using memory.yaml")
-                self._publish_status(f"🗺️ Querying memory map for alternative path to '{obj}'...")
+                self._publish_status(f"📍 Searching memory.yaml for path to '{obj}'...")
                 
                 # Force motion planner to find path
                 success = self._navigate_with_motion_planner(obj, relation)
@@ -411,12 +422,15 @@ class ServiceNode(Node):
                         self.get_logger().info(f"📍 Location updated to: {room_name}")
                     
                     self._publish_status(f"✅ Success: Found and initiated alternative route via memory!")
+                    self.robot_state = "reachGoal"  # Reset state on success
                     return True
                 else:
                     self._publish_status(f"❌ Failure: Memory search yielded no valid path to '{obj}'")
+                    self.robot_state = "failed"  # Ensure state remains failed
                     return False
             else:
                 self._publish_status(f"❌ Critical: Motion planner unavailable - cannot reroute")
+                self.robot_state = "failed"  # Ensure state remains failed
                 return False
         
         dis, wx, wy = self.memory_builder.pix2camera_frame(center, self.depth_image, self.get_logger())
@@ -687,6 +701,7 @@ class ServiceNode(Node):
         if retry_count > 3:
             self.get_logger().error(f"❌ Max replanning attempts ({retry_count}) reached. Cannot reach '{obj_name}'")
             self._publish_status(f"❌ Cannot find any path to '{obj_name}' - all routes blocked")
+            self.robot_state = "failed"  # Mark as failed
             return False
         
         self.get_logger().info(f"🗺️ Motion planner activated for '{obj_name}'")
@@ -708,6 +723,7 @@ class ServiceNode(Node):
         if not room_name or not coords:
             self.get_logger().error(f"❌ Object '{obj_name}' NOT FOUND in memory.yaml")
             self._publish_status(f"❌ '{obj_name}' not in memory - cannot plan route")
+            self.robot_state = "failed"  # Mark as failed
             return False
         
         self.get_logger().info(f"✅ Found '{obj_name}' in room '{room_name}' at {coords}")
@@ -739,6 +755,7 @@ class ServiceNode(Node):
         if not path or len(path) == 0:
             self.get_logger().warn(f"⚠️ No path found from '{current_location}' to '{room_name}'")
             self._publish_status(f"❌ No valid path found between '{current_location}' and '{room_name}'")
+            self.robot_state = "failed"  # Mark as failed
             return False
         
         self.get_logger().info(f"🛤️ Planned path: {' -> '.join(path)}")
@@ -778,7 +795,9 @@ class ServiceNode(Node):
                             
                             # Remove the blocked edge and replan
                             self._publish_status(f"🚧 Obstacle detected: Path blocked between {prev_waypoint} and {waypoint}")
+                            time.sleep(0.1)  # Small delay to ensure message is received
                             self._publish_status(f"🚫 Marking edge as impassable in memory map")
+                            time.sleep(0.1)  # Small delay to ensure message is received
                             self._publish_status(f"🔄 Recalculating optimal path to '{obj_name}'...")
                             
                             # Trigger replanning with edge removal
@@ -797,10 +816,12 @@ class ServiceNode(Node):
                             else:
                                 self.get_logger().error("❌ No alternative path exists")
                                 self._publish_status("❌ Failure: All potential routes to target are blocked")
+                                self.robot_state = "failed"  # Mark as failed
                                 return False
                         else:
                             self.get_logger().error("❌ Failed at first waypoint")
                             self._publish_status("❌ Failed to leave starting location")
+                            self.robot_state = "failed"  # Mark as failed
                             return False
                     else:
                         # Success - update current location
@@ -856,6 +877,7 @@ class ServiceNode(Node):
             else:
                 self.get_logger().error(f"❌ Cannot compute distance to '{obj_name}'")
                 self._publish_status(f"❌ Failure: Could not calculate distance to object")
+                self.robot_state = "failed"  # Mark as failed
                 return False
         else:
             # If still not visible, navigate to stored coordinates
@@ -900,10 +922,12 @@ class ServiceNode(Node):
                 else:
                     self.get_logger().error(f"❌ Camera pose not available for '{obj_name}'")
                     self._publish_status(f"❌ Failure: Cannot execute fallback (no camera pose)")
+                    self.robot_state = "failed"  # Mark as failed
                     return False
             else:
                 self.get_logger().error(f"❌ No coordinates available for '{obj_name}'")
                 self._publish_status(f"❌ Failure: No fallback coordinates in memory")
+                self.robot_state = "failed"  # Mark as failed
                 return False
         
         # Should never reach here - no goal was published
