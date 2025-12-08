@@ -2,84 +2,36 @@ edges:
 - cost: 0.77
   from: dining room
   to: kitchen
-- cost: 5.94
-  from: dining room
-  to: bedroom1
 - cost: 1.59
   from: dining room
   to: entrance hall
-- cost: 8.59
-  from: dining room
-  to: home gym
-- cost: 5.98
-  from: kitchen
-  to: bedroom1
-- cost: 7.29
-  from: living room
-  to: bedroom1
-- cost: 5.86
+- cost: 4.42
   from: living room
   to: entrance hall
-- cost: 0.43
+- cost: 1.05
   from: living room
   to: home gym
-- cost: 1.5
+- cost: 3.5
   from: living room
-  to: home gym
-- cost: 0.08
-  from: living room
-  to: fitness room
-- cost: 0.48
-  from: living room
-  to: exercise room
+  to: bedroom2
 - cost: 5.18
   from: bedroom1
   to: entrance hall
-- cost: 7.46
-  from: bedroom1
-  to: home gym
 - cost: 7.1
   from: bedroom1
   to: bedroom2
-- cost: 7.34
+- cost: 5.9
   from: bedroom1
-  to: fitness room
-- cost: 5.45
-  from: entrance hall
-  to: home gym
-- cost: 5.93
-  from: entrance hall
-  to: fitness room
-- cost: 5.53
-  from: entrance hall
-  to: exercise room
+  to: living room
 - cost: 5.7
   from: home gym
   to: bedroom2
-- cost: 0.5
-  from: home gym
-  to: fitness room
-- cost: 0.22
-  from: home gym
-  to: exercise room
-- cost: 2.95
-  from: home gym
-  to: gym
 - cost: 4.1
   from: home gym
   to: bedroom2
-- cost: 1.44
-  from: home gym
-  to: fitness room
-- cost: 1.52
-  from: home gym
-  to: gym
-- cost: 4.6
+- cost: 0.7
   from: bedroom2
-  to: gym
-- cost: 0.54
-  from: fitness room
-  to: exercise room
+  to: bed
 nodes:
 - features:
   - Coordinate relative to the camera frame:
@@ -131,26 +83,19 @@ nodes:
     depth: 2.82
     object: person
   - Coordinate relative to the camera frame:
-    - 2.303
-    - -0.9578544869091884
+    - 0.77
+    - 0.81
     Coordinate relative to the world frame:
-    - 0.9787408611867557
-    - 7.2925665660844805
-    confidence: 0.822079062461853
-    depth: 2.303
-    object: chair
-  - Coordinate relative to the camera frame:
-    - 2.561100721359253
-    - 0.7755853758093341
-    Coordinate relative to the world frame:
-    - -3.2898655399185577
-    - 0.12324192135467016
+    - -0.814
+    - 2.29
+    confidence: 0.9
+    depth: 0.77
     object: sofa
   name: living room
   pose:
-  - 0.7113503813743591
-  - -0.5479761958122253
-  - -2.7477612495422363
+  - -0.83
+  - 1.62
+  - 0.0018
 - features: []
   name: bedroom1
   pose:
@@ -232,49 +177,3 @@ nodes:
   - -4.523774272203445
   - 0.857258987426758
   - 0.261378002166748
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.1516361236572266
-    - -0.5678188285808626
-    Coordinate relative to the world frame:
-    - -1.7484454622026502
-    - -2.71470209738655
-    object: exercise ball
-  name: fitness room
-  pose:
-  - 0.6601101160049438
-  - -0.6042309403419495
-  - -2.243807077407837
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.1516661643981934
-    - -0.5678242409120063
-    Coordinate relative to the world frame:
-    - -1.7457032807688402
-    - -2.7164045901033145
-    object: exercise ball
-  - Coordinate relative to the camera frame:
-    - 3.6301159858703613
-    - 0.6679402281664328
-    Coordinate relative to the world frame:
-    - -1.7246134499158323
-    - -2.7461298953036306
-    object: blue ball
-  name: exercise room
-  pose:
-  - 1.1852378845214844
-  - -0.4753037393093109
-  - -2.660886764526367
-- features:
-  - Coordinate relative to the camera frame:
-    - 3.630155563354492
-    - 0.6679475104113759
-    Coordinate relative to the world frame:
-    - -1.7258892147287308
-    - -2.7453068468794735
-    object: blue ball
-  name: gym
-  pose:
-  - -1.1410810947418213
-  - -2.2662084102630615
-  - -2.411292791366577

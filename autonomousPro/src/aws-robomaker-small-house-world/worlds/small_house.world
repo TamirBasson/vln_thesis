@@ -2,7 +2,7 @@
   <world name='default'>
     <gui fullscreen='0'>
       <camera name='gzclient_camera'>
-        <pose>4.30182 1.95305 14.4987 -0 0.929799 -1.93091</pose>
+        <pose>1.04521 0.926309 25.1136 3.6e-05 1.5698 -1.58287</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -3515,10 +3515,10 @@
       <pose>0 0 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>7277 30000000</sim_time>
-      <real_time>45 788105196</real_time>
-      <wall_time>1764417136 348375336</wall_time>
-      <iterations>44743</iterations>
+      <sim_time>7342 794000000</sim_time>
+      <real_time>72 873844994</real_time>
+      <wall_time>1765125113 596676623</wall_time>
+      <iterations>65764</iterations>
       <model name='AirconditionerA_01_001'>
         <pose>-9.19941 2.41123 2.08454 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -3550,10 +3550,10 @@
         </link>
       </model>
       <model name='Bed_01_001'>
-        <pose>-6.16507 2.03056 -1e-05 0 -0 0</pose>
+        <pose>-5.50178 2.03056 -1e-05 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='aws_robomaker_residential_Bed_01::link'>
-          <pose>-6.16507 2.03056 -1e-05 0 -0 0</pose>
+          <pose>-5.50178 2.03056 -1e-05 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3740,10 +3740,10 @@
         </link>
       </model>
       <model name='FloorB_01_001'>
-        <pose>0.215969 0.106589 0 0 -0 0</pose>
+        <pose>0.078924 -0.029363 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='aws_robomaker_residential_FloorB_01::link'>
-          <pose>0.215969 0.106589 0 0 -0 0</pose>
+          <pose>0.078924 -0.029363 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3840,20 +3840,20 @@
         </link>
       </model>
       <model name='NightStand_01_001'>
-        <pose>-7.72551 2.86042 0.005258 -2e-06 0 0</pose>
+        <pose>-7.36184 2.83204 0.005258 -2e-06 0 0</pose>
         <scale>1 1 1</scale>
         <link name='aws_robomaker_residential_NightStand_01::link'>
-          <pose>-7.72551 2.86042 0.005258 -2e-06 0 0</pose>
+          <pose>-7.36184 2.83204 0.005258 -2e-06 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='NightStand_01_002'>
-        <pose>-4.40734 2.86042 0.005256 0 2e-06 0</pose>
+        <pose>-4.16132 2.86042 0.005256 0 2e-06 0</pose>
         <scale>1 1 1</scale>
         <link name='aws_robomaker_residential_NightStand_01::link'>
-          <pose>-4.40734 2.86042 0.005256 0 2e-06 0</pose>
+          <pose>-4.16132 2.86042 0.005256 0 2e-06 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -4070,10 +4070,10 @@
         </link>
       </model>
       <model name='ShoeRack_01_001_clone'>
-        <pose>-3.27587 2.85889 0 0 -0 0</pose>
+        <pose>-3.23781 2.85889 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='aws_robomaker_residential_ShoeRack_01::link'>
-          <pose>-3.27587 2.85889 0 0 -0 0</pose>
+          <pose>-3.23781 2.85889 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -4160,37 +4160,37 @@
         </link>
       </model>
       <model name='autonomous_robot'>
-        <pose>-1.44955 -2.06149 0.002882 -1e-06 0.003088 -0.644443</pose>
+        <pose>-1.44958 -2.06146 0.002882 -1e-06 0.003088 -0.644523</pose>
         <scale>1 1 1</scale>
         <link name='base_footprint'>
-          <pose>-1.44955 -2.06149 0.002882 -1e-06 0.003088 -0.644443</pose>
-          <velocity>2e-06 -3e-06 7.8e-05 1e-05 1.4e-05 3e-06</velocity>
-          <acceleration>-0.000235 -0.000232 -5.8e-05 -0.005911 0.006942 -0.00659</acceleration>
-          <wrench>-0.00112 -0.001107 -0.000278 0 -0 0</wrench>
+          <pose>-1.44958 -2.06146 0.002882 -1e-06 0.003088 -0.644523</pose>
+          <velocity>4e-06 -1e-06 7.8e-05 1.3e-05 1.1e-05 1e-05</velocity>
+          <acceleration>4.9e-05 4e-06 4e-05 -0.000358 0.000445 0.000535</acceleration>
+          <wrench>0.000235 1.7e-05 0.000191 0 -0 0</wrench>
         </link>
         <link name='front_hinge'>
-          <pose>-1.06049 -2.35382 0.16288 -0 0.003087 -0.644443</pose>
-          <velocity>4e-06 -3e-06 7e-05 -8e-06 4.9e-05 0.00021</velocity>
-          <acceleration>-0.000665 -0.000584 -0.000321 -0.020452 0.048684 0.396437</acceleration>
-          <wrench>-0.000332 -0.000292 -0.000161 0 -0 0</wrench>
+          <pose>-1.06055 -2.35382 0.16288 0 0.003087 -0.644523</pose>
+          <velocity>7e-06 1e-06 7.1e-05 1.7e-05 2.6e-05 -0.00016</velocity>
+          <acceleration>0.000109 0.000123 7e-06 -0.001112 0.001207 0.002708</acceleration>
+          <wrench>5.5e-05 6.2e-05 3e-06 0 -0 0</wrench>
         </link>
         <link name='left_wheel_link'>
-          <pose>-1.26538 -1.82796 0.177931 -1e-06 0.00301 -0.644443</pose>
-          <velocity>3e-06 -3e-06 7.6e-05 1.8e-05 1.7e-05 3e-06</velocity>
-          <acceleration>-0.00055 -0.001226 -0.002803 0.00254 0.006618 -0.007143</acceleration>
-          <wrench>-0.001665 -0.00371 -0.008484 0 -0 0</wrench>
+          <pose>-1.26539 -1.82795 0.177931 -1e-06 0.002971 -0.644523</pose>
+          <velocity>2e-06 -2e-06 7.6e-05 1.3e-05 1.4e-05 8e-06</velocity>
+          <acceleration>-0.001132 -0.000289 -0.002355 -0.001132 0.003901 -0.00147</acceleration>
+          <wrench>-0.003427 -0.000876 -0.007129 0 -0 0</wrench>
         </link>
         <link name='rear_hinge'>
-          <pose>-1.82794 -1.7771 0.165844 -1e-06 0.003088 -0.644443</pose>
-          <velocity>4e-06 -4e-06 8.7e-05 1.2e-05 1.6e-05 6e-06</velocity>
-          <acceleration>0.001466 0.001618 -0.000326 -0.001773 0.000939 0.00295</acceleration>
-          <wrench>0.000733 0.000809 -0.000163 0 -0 0</wrench>
+          <pose>-1.82795 -1.77704 0.165844 -1e-06 0.003088 -0.644523</pose>
+          <velocity>2e-06 -6e-06 8.8e-05 1.4e-05 1.6e-05 1.2e-05</velocity>
+          <acceleration>-0.000118 -0.000174 9.1e-05 0.000103 0.000128 0.001073</acceleration>
+          <wrench>-5.9e-05 -8.7e-05 4.5e-05 0 -0 0</wrench>
         </link>
         <link name='right_wheel_link'>
-          <pose>-1.62259 -2.3033 0.177931 -1e-06 0.002858 -0.644443</pose>
-          <velocity>4e-06 -4e-06 7.7e-05 1.9e-05 2.3e-05 1e-06</velocity>
-          <acceleration>-0.003294 0.001441 0.000552 0.001913 0.013445 -0.00871</acceleration>
-          <wrench>-0.00997 0.004361 0.00167 0 -0 0</wrench>
+          <pose>-1.62264 -2.30326 0.177931 -1e-06 0.002783 -0.644523</pose>
+          <velocity>6e-06 -4e-06 7.7e-05 2e-05 3e-05 7e-06</velocity>
+          <acceleration>-0.00191 0.001322 -0.000184 0.000193 0.022577 -0.002465</acceleration>
+          <wrench>-0.005781 0.004001 -0.000556 0 -0 0</wrench>
         </link>
       </model>
       <model name='aws_robomaker_residential_Dumbbell_01'>
@@ -4224,33 +4224,33 @@
         </link>
       </model>
       <model name='person_standing'>
-        <pose>8.28115 -3.07411 -0 1e-06 -0 1.59274</pose>
+        <pose>8.28117 -3.07409 0 -1e-06 -0 1.59279</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>8.28115 -3.07411 -0 1e-06 -0 1.59274</pose>
+          <pose>8.28117 -3.07409 0 -1e-06 -0 1.59279</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.06196 0.126362 -9.15639 -0.128297 0.068314 0.002681</acceleration>
-          <wrench>4.95683 10.1089 -732.511 0 -0 0</wrench>
+          <acceleration>1.44929 -1.65459 0.901137 -1.53863 1.33969 -1.65105</acceleration>
+          <wrench>115.943 -132.367 72.0909 0 -0 0</wrench>
         </link>
       </model>
       <model name='person_standing_clone'>
-        <pose>-6.04312 0.36736 -0 -1e-06 -1e-06 1.59825</pose>
+        <pose>-6.04314 0.367289 -0 0 -0 1.59892</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-6.04312 0.36736 -0 -1e-06 -1e-06 1.59825</pose>
+          <pose>-6.04314 0.367289 -0 0 -0 1.59892</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.405147 -1.71309 -1.04771 1.73159 -0.443395 0.024034</acceleration>
-          <wrench>-32.4118 -137.047 -83.817 0 -0 0</wrench>
+          <acceleration>-0 0 -0 0 -0 0</acceleration>
+          <wrench>-0 0 -0 0 -0 0</wrench>
         </link>
       </model>
       <model name='person_walking'>
-        <pose>5.62146 -3.74062 -1e-06 2e-06 -1e-06 0.002001</pose>
+        <pose>5.62124 -3.74059 -1e-06 -2e-06 -1e-06 0.002403</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>5.62146 -3.74062 -1e-06 2e-06 -1e-06 0.002001</pose>
+          <pose>5.62124 -3.74059 -1e-06 -2e-06 -1e-06 0.002403</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.766728 -2.14973 -2.16539 2.29454 -0.626952 -0.434405</acceleration>
-          <wrench>-61.3382 -171.979 -173.231 0 -0 0</wrench>
+          <acceleration>-0.724262 2.14517 -2.11204 -2.28584 -0.543574 0.521653</acceleration>
+          <wrench>-57.941 171.614 -168.963 0 -0 0</wrench>
         </link>
       </model>
       <light name='BedRoom_CeilingLight_0'>

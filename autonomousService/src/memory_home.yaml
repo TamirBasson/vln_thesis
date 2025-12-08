@@ -2,15 +2,9 @@ edges:
 - cost: 0.77
   from: dining room
   to: kitchen
-- cost: 5.94
-  from: dining room
-  to: bedroom1
 - cost: 1.59
   from: dining room
   to: entrance hall
-- cost: 5.98
-  from: kitchen
-  to: bedroom1
 - cost: 4.42
   from: living room
   to: entrance hall
@@ -23,15 +17,12 @@ edges:
 - cost: 5.18
   from: bedroom1
   to: entrance hall
-- cost: 7.46
-  from: bedroom1
-  to: home gym
 - cost: 7.1
   from: bedroom1
   to: bedroom2
-- cost: 5.45
-  from: entrance hall
-  to: home gym
+- cost: 5.9
+  from: bedroom1
+  to: living room
 - cost: 5.7
   from: home gym
   to: bedroom2
@@ -92,19 +83,19 @@ nodes:
     depth: 2.82
     object: person
   - Coordinate relative to the camera frame:
-    - 2.303
-    - -0.9578544869091884
+    - 0.77
+    - 0.81
     Coordinate relative to the world frame:
-    - 0.9787408611867557
-    - 7.2925665660844805
-    confidence: 0.822079062461853
-    depth: 2.303
-    object: chair
+    - -0.814
+    - 2.29
+    confidence: 0.9
+    depth: 0.77
+    object: sofa
   name: living room
   pose:
-  - 1.7757316827774048
-  - 0.46944716572761536
-  - -2.1757595539093018
+  - -0.83
+  - 1.62
+  - 0.0018
 - features: []
   name: bedroom1
   pose:
