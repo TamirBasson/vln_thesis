@@ -185,9 +185,9 @@ class ServiceNode(Node):
 
     def _setup_timers(self):
         """Initialize ROS2 timers"""
-        self.update_memory_map = self.create_timer(1.0, self.update_map)
+        self.update_memory_map = self.create_timer(5.0, self.update_map)
         self.camera2map_monitor_timer = self.create_timer(2.0, self.monitor_camera2map_topic)
-        self.command_processor_timer = self.create_timer(0.5, self.process_command_queue)
+        self.command_processor_timer = self.create_timer(0.1, self.process_command_queue)
         # Dedicated timer for GUI updates (30 Hz) to keep window responsive
         self.display_timer = self.create_timer(0.033, self.update_display)
 

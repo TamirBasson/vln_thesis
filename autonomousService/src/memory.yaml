@@ -2,36 +2,51 @@ edges:
 - cost: 0.77
   from: dining room
   to: kitchen
+- cost: 5.94
+  from: dining room
+  to: bedroom1
 - cost: 1.59
   from: dining room
   to: entrance hall
-- cost: 4.42
+- cost: 8.59
+  from: dining room
+  to: home gym
+- cost: 5.98
+  from: kitchen
+  to: bedroom1
+- cost: 8.11
   from: living room
-  to: entrance hall
-- cost: 1.05
+  to: bedroom1
+- cost: 2.3
   from: living room
   to: home gym
-- cost: 3.5
+- cost: 0.67
+  from: living room
+  to: home gym
+- cost: 4.25
   from: living room
   to: bedroom2
 - cost: 5.18
   from: bedroom1
   to: entrance hall
+- cost: 7.46
+  from: bedroom1
+  to: home gym
 - cost: 7.1
   from: bedroom1
   to: bedroom2
-- cost: 5.9
-  from: bedroom1
-  to: living room
-- cost: 5.7
+- cost: 5.45
+  from: entrance hall
+  to: home gym
+- cost: 7.0
+  from: entrance hall
+  to: home gym
+- cost: 1.89
   from: home gym
-  to: bedroom2
+  to: home gym
 - cost: 4.1
   from: home gym
   to: bedroom2
-- cost: 0.7
-  from: bedroom2
-  to: bed
 nodes:
 - features:
   - Coordinate relative to the camera frame:
@@ -91,11 +106,39 @@ nodes:
     confidence: 0.9
     depth: 0.77
     object: sofa
+  - Coordinate relative to the camera frame:
+    - 3.0093069076538086
+    - -0.974763037899133
+    Coordinate relative to the world frame:
+    - 3.4994020494879474
+    - -0.9702213332163514
+    object: tv stand
+  - Coordinate relative to the camera frame:
+    - 3.00925350189209
+    - -0.974745738911648
+    Coordinate relative to the world frame:
+    - 3.4998122114858488
+    - -0.9671240123652665
+    object: table
+  - Coordinate relative to the camera frame:
+    - 3.247969150543213
+    - -1.38200857020852
+    Coordinate relative to the world frame:
+    - 3.7387824361503124
+    - -1.3742375179023423
+    object: TV
+  - Coordinate relative to the camera frame:
+    - 3.0092289447784424
+    - -0.9747377844665097
+    Coordinate relative to the world frame:
+    - 3.4997876494038436
+    - -0.9671160732749077
+    object: seating area
   name: living room
   pose:
-  - -0.83
-  - 1.62
-  - 0.0018
+  - -0.9466457962989807
+  - -1.4319783449172974
+  - 1.32896888256073
 - features: []
   name: bedroom1
   pose:
